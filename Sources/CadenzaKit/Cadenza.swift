@@ -4,16 +4,23 @@ import CadenzaDomain
 public struct Cadenza: Sendable {
     public struct Configuration: Equatable, Sendable {
         public let defaultProvider: String
+        public let features: FeatureFlags
 
-        public init(defaultProvider: String) {
+        public init(defaultProvider: String, features: FeatureFlags = .init()) {
             self.defaultProvider = defaultProvider
+            self.features = features
         }
     }
 
     public let configuration: Configuration
     private let providers: [String: any SourceProvider]
+    private let runtimeCapabilities: @Sendable () async -> RuntimeCapabilities
 
-    public init(configuration: Configuration, providers: [any SourceProvider]) throws {
+    public init(
+        configuration: Configuration,
+        providers: [any SourceProvider],
+        runtimeCapabilities: @escaping @Sendable () async -> RuntimeCapabilities = { .init() }
+    ) throws {
         var registry: [String: any SourceProvider] = [:]
         for provider in providers {
             guard registry.updateValue(provider, forKey: provider.identifier) == nil else {
@@ -25,6 +32,16 @@ public struct Cadenza: Sendable {
         }
         self.configuration = configuration
         self.providers = registry
+        self.runtimeCapabilities = runtimeCapabilities
+    }
+
+    public func availability(for feature: Feature, provider identifier: String? = nil) async throws -> FeatureAvailability {
+        try Task.checkCancellation()
+        let identifier = identifier ?? configuration.defaultProvider
+        guard let provider = providers[identifier] else { throw CadenzaError.providerNotFound(identifier) }
+        let runtime = await runtimeCapabilities()
+        try Task.checkCancellation()
+        return runtime.availability(for: feature, flags: configuration.features, source: provider.supportedFeatures)
     }
 
     public func resolve(_ id: MediaID, provider identifier: String? = nil) async throws -> MediaResource {
@@ -32,6 +49,9 @@ public struct Cadenza: Sendable {
         let identifier = identifier ?? configuration.defaultProvider
         guard let provider = providers[identifier] else {
             throw CadenzaError.providerNotFound(identifier)
+        }
+        if case let .unavailable(reason) = try await availability(for: .sourceResolution, provider: identifier) {
+            throw CadenzaError.featureUnavailable(.sourceResolution, reason)
         }
         let resource: MediaResource
         do {

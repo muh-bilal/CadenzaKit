@@ -41,10 +41,16 @@ public enum CadenzaError: Error, Equatable, Sendable {
     case providerNotFound(String)
     case resourceIdentityMismatch
     case sourceFailure(provider: String, message: String)
+    case featureUnavailable(Feature, UnavailabilityReason)
 }
 
 /// Implementations must cooperate with task cancellation and support concurrent calls.
 public protocol SourceProvider: Sendable {
     var identifier: String { get }
+    var supportedFeatures: Set<Feature> { get }
     func resolve(_ id: MediaID) async throws -> MediaResource
+}
+
+extension SourceProvider {
+    public var supportedFeatures: Set<Feature> { [.sourceResolution] }
 }
