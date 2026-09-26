@@ -42,6 +42,15 @@ public enum CadenzaError: Error, Equatable, Sendable {
     case resourceIdentityMismatch
     case sourceFailure(provider: String, message: String)
     case featureUnavailable(Feature, UnavailabilityReason)
+    case resourceNotFound(MediaID)
+    case unsupportedURL
+    case unreadableFile
+    case unsupportedMedia
+    case playbackFailure(String)
+    case invalidPosition
+    case invalidDuration
+    case noMediaLoaded
+    case operationInProgress
 }
 
 /// Implementations must cooperate with task cancellation and support concurrent calls.

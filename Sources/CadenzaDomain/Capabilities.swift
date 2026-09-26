@@ -1,18 +1,26 @@
 /// Cases are added only alongside their implemented service operation.
 public enum Feature: String, CaseIterable, Hashable, Sendable {
     case sourceResolution
+    case playback
+    case seeking
 }
 
 public struct FeatureFlags: Equatable, Sendable {
     public var sourceResolution: Bool
+    public var playback: Bool
+    public var seeking: Bool
 
-    public init(sourceResolution: Bool = true) {
+    public init(sourceResolution: Bool = true, playback: Bool = true, seeking: Bool = true) {
         self.sourceResolution = sourceResolution
+        self.playback = playback
+        self.seeking = seeking
     }
 
     public func isEnabled(_ feature: Feature) -> Bool {
         switch feature {
         case .sourceResolution: sourceResolution
+        case .playback: playback
+        case .seeking: seeking
         }
     }
 }
@@ -38,9 +46,9 @@ public struct RuntimeCapabilities: Equatable, Sendable {
     public var outputRoute: Set<Feature>
 
     public init(
-        backend: Set<Feature> = [.sourceResolution],
-        platform: Set<Feature> = [.sourceResolution],
-        outputRoute: Set<Feature> = [.sourceResolution]
+        backend: Set<Feature> = [.sourceResolution, .playback, .seeking],
+        platform: Set<Feature> = [.sourceResolution, .playback, .seeking],
+        outputRoute: Set<Feature> = [.sourceResolution, .playback, .seeking]
     ) {
         self.backend = backend
         self.platform = platform

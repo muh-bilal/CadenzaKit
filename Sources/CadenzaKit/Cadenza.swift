@@ -44,6 +44,11 @@ public struct Cadenza: Sendable {
         return runtime.availability(for: feature, flags: configuration.features, source: provider.supportedFeatures)
     }
 
+    @MainActor
+    public func makeSession(backend: any PlaybackBackend) -> PlaybackSession {
+        PlaybackSession(kit: self, backend: backend)
+    }
+
     public func resolve(_ id: MediaID, provider identifier: String? = nil) async throws -> MediaResource {
         try Task.checkCancellation()
         let identifier = identifier ?? configuration.defaultProvider

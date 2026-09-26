@@ -11,9 +11,11 @@ Swift 6 concurrency checking is enabled.
 - Initialization-time feature flags and runtime capability intersection, enforced
   by the resolution service before invoking the selected source provider.
 - `CadenzaTesting`: closure-based source providers for host tests.
+- `CadenzaLocalSources`: explicit local-file catalog with identity and access checks.
+- `CadenzaAVPlayback`: local AVPlayer adapter, injected into a deterministic session.
 
-No playback backend is implemented yet. The facade resolves media locations; it
-does not assert that a URL is playable or that the host has permission to read it.
+Resolution alone does not assert that a URL is playable. Loading through the
+backend validates media; the host owns file permissions/security-scoped access.
 
 ```swift
 import CadenzaDomain
@@ -38,8 +40,40 @@ operation. `availability(for:provider:)` returns a structured denial reason with
 precedence: disabled, source, backend, platform, output route. The injected
 `runtimeCapabilities` closure is evaluated on every query/operation, not cached.
 The default snapshot permits resolution, which itself needs no audio route.
-Playback and other feature flags will be introduced with their actual services;
-the current policy API does not assert that an audio backend or route exists.
+`playback` and `seeking` flags control session commands. Sessions additionally check
+the actual backend's declared support. Pause/stop remain available when permission
+is revoked so the host can always halt playback. Runtime snapshots are policy,
+not physical route discovery; actual audio-session/route integration is later work.
+
+## Local playback
+
+```swift
+import CadenzaDomain
+import CadenzaKit
+import CadenzaLocalSources
+import CadenzaAVPlayback
+
+// Execute on MainActor. Use a URL your app is permitted to read.
+let id = try MediaID("track-1")
+let media = MediaResource(id: id, url: fileURL, title: "Track")
+let source = try LocalFileSource(resources: [id: media])
+let kit = try Cadenza(configuration: .init(defaultProvider: source.identifier), providers: [source])
+let session = kit.makeSession(backend: AVPlayerBackend())
+try await session.load(id)
+try await session.play()
+try session.refresh()
+let snapshot = session.snapshot
+```
+
+Use one backend instance per session. Session and backend operations are serialized
+on MainActor for Apple media APIs; they do not depend on UI frameworks. Async load
+and seek reject competing commands with `operationInProgress`. `stop()` invalidates
+pending work and returns to idle; stale completions cannot overwrite newer state.
+Backend failures require reload. Invalid seeks and denied transport commands retain
+the previous state. `refresh()` explicitly samples progress/EOF; no timer is hidden
+inside the session. Loading supports finite local media only. Integration tests
+validate real decode/seek/progress/EOF, not physical speaker audibility, interruptions,
+background execution, or output-route behavior.
 
 The package has no external dependencies, UI requirement, bundled media, fonts,
 or icon packs. SDK resources, when introduced, are limited to localization.
