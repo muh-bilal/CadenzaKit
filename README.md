@@ -75,6 +75,24 @@ inside the session. Loading supports finite local media only. Integration tests
 validate real decode/seek/progress/EOF, not physical speaker audibility, interruptions,
 background execution, or output-route behavior.
 
+## Queue and history
+
+`kit.makeQueue(backend:)` creates an in-memory playback queue. Insert `QueueEntry`
+values with explicit occurrence UUIDs; duplicate media IDs are supported. Insert,
+remove and move validate indices/identities before mutation. Removing the active
+entry stops playback; removing an unplayed entry does not alter playback. `play()`
+resumes the selected entry; `play(entryID)` explicitly selects/restarts an occurrence.
+`next()` and `previous()` maintain a successful-playback history, including forward
+navigation after going back. Failed selections do not create history entries.
+`refresh()` samples playback and advances on EOF; the final item remains ended.
+AVPlayer EOF uses its actual end notification, not a duration-equality assumption.
+
+`FeatureFlags.queueManagement` gates queue mutations/commands. Ordering unresolved
+IDs requires no audio capability; selection delegates to the session's live source,
+backend, platform and route checks. History is session-local; durable history is
+not claimed. The caller owns refresh cadence. Queue edits are rejected during
+pending operations, and `stop()` invalidates pending selections.
+
 The package has no external dependencies, UI requirement, bundled media, fonts,
 or icon packs. SDK resources, when introduced, are limited to localization.
 The repository license is pending the owner's explicit choice; no distribution

@@ -51,6 +51,13 @@ public enum CadenzaError: Error, Equatable, Sendable {
     case invalidDuration
     case noMediaLoaded
     case operationInProgress
+    case queueDisabled
+    case duplicateQueueEntry
+    case queueEntryNotFound
+    case invalidQueueIndex
+    case emptyQueue
+    case noNextEntry
+    case noPreviousEntry
 }
 
 /// Implementations must cooperate with task cancellation and support concurrent calls.

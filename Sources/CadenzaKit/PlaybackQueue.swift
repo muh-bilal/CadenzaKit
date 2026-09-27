@@ -1,0 +1,140 @@
+import Foundation
+import CadenzaDomain
+
+/// In-memory queue and successful-playback history. Mutation is rejected while a
+/// selection is pending. The owner drives refresh() for progress and EOF advance.
+@MainActor
+public final class PlaybackQueue {
+    public private(set) var entries: [QueueEntry] = []
+    public private(set) var currentEntryID: UUID?
+    public private(set) var history: [UUID] = []
+    private var historyIndex: Int?
+    private let session: PlaybackSession
+    private let enabled: Bool
+    private var busy = false
+    private var generation: UInt64 = 0
+
+    init(session: PlaybackSession, enabled: Bool) {
+        self.session = session
+        self.enabled = enabled
+    }
+
+    public var snapshot: PlaybackSnapshot { session.snapshot }
+
+    public func insert(_ entry: QueueEntry, at index: Int) throws {
+        try checkMutation()
+        guard (0...entries.count).contains(index) else { throw CadenzaError.invalidQueueIndex }
+        guard !entries.contains(where: { $0.id == entry.id }) else { throw CadenzaError.duplicateQueueEntry }
+        entries.insert(entry, at: index)
+    }
+
+    public func move(_ id: UUID, to index: Int) throws {
+        try checkMutation()
+        guard entries.indices.contains(index) else { throw CadenzaError.invalidQueueIndex }
+        guard let old = entries.firstIndex(where: { $0.id == id }) else { throw CadenzaError.queueEntryNotFound }
+        entries.insert(entries.remove(at: old), at: index)
+    }
+
+    public func remove(_ id: UUID) throws {
+        try checkMutation()
+        guard let index = entries.firstIndex(where: { $0.id == id }) else { throw CadenzaError.queueEntryNotFound }
+        entries.remove(at: index)
+        let visitedCount = history.prefix((historyIndex ?? -1) + 1).filter { $0 != id }.count
+        history.removeAll { $0 == id }
+        historyIndex = visitedCount > 0 ? visitedCount - 1 : nil
+        if currentEntryID == id { stop() }
+    }
+
+    public func play(_ id: UUID? = nil) async throws {
+        try checkMutation()
+        if id == nil, currentEntryID != nil {
+            busy = true
+            let token = generation
+            defer { if token == generation { busy = false } }
+            try await session.play()
+            return
+        }
+        guard let selected = id ?? entries.first?.id else { throw CadenzaError.emptyQueue }
+        try await select(selected, historyPosition: nil)
+    }
+
+    public func next() async throws {
+        try checkMutation()
+        guard !entries.isEmpty else { throw CadenzaError.emptyQueue }
+        if let historyIndex, historyIndex + 1 < history.count {
+            try await select(history[historyIndex + 1], historyPosition: historyIndex + 1)
+            return
+        }
+        let index = entries.firstIndex { $0.id == currentEntryID }.map { $0 + 1 } ?? 0
+        guard entries.indices.contains(index) else { throw CadenzaError.noNextEntry }
+        try await select(entries[index].id, historyPosition: nil)
+    }
+
+    public func previous() async throws {
+        try checkMutation()
+        guard let historyIndex else { throw CadenzaError.noPreviousEntry }
+        let previous = currentEntryID == nil ? historyIndex : historyIndex - 1
+        guard history.indices.contains(previous) else { throw CadenzaError.noPreviousEntry }
+        try await select(history[previous], historyPosition: previous)
+    }
+
+    public func pause() throws {
+        try checkMutation()
+        try session.pause()
+    }
+
+    public func seek(to position: Double) async throws {
+        try checkMutation()
+        busy = true
+        let token = generation
+        defer { if token == generation { busy = false } }
+        try await session.seek(to: position)
+    }
+
+    public func stop() {
+        generation &+= 1
+        busy = false
+        session.stop()
+        currentEntryID = nil
+    }
+
+    public func refresh() async throws {
+        try checkMutation()
+        guard currentEntryID != nil else { return }
+        try session.refresh()
+        if snapshot.state == .ended {
+            do { try await next() }
+            catch CadenzaError.noNextEntry { /* Keep the final ended item selected. */ }
+        }
+    }
+
+    private func checkMutation() throws {
+        guard enabled else { throw CadenzaError.queueDisabled }
+        guard !busy else { throw CadenzaError.operationInProgress }
+    }
+
+    private func select(_ id: UUID, historyPosition: Int?) async throws {
+        guard let entry = entries.first(where: { $0.id == id }) else { throw CadenzaError.queueEntryNotFound }
+        busy = true
+        let token = generation
+        defer { if token == generation { busy = false } }
+        do {
+            try await session.load(entry.mediaID, provider: entry.provider)
+            try Task.checkCancellation()
+            guard token == generation else { throw CancellationError() }
+            try await session.play()
+            guard token == generation else { throw CancellationError() }
+            currentEntryID = id
+            if let historyPosition {
+                historyIndex = historyPosition
+            } else {
+                history = Array(history.prefix((historyIndex ?? -1) + 1))
+                history.append(id)
+                historyIndex = history.count - 1
+            }
+        } catch {
+            if token == generation { currentEntryID = nil }
+            throw error
+        }
+    }
+}

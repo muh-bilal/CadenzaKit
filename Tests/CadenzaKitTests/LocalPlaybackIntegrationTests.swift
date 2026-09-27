@@ -96,4 +96,25 @@ struct LocalPlaybackIntegrationTests {
         await #expect(throws: CancellationError.self) { try await cancelled.value }
         backend.stop()
     }
+
+    @Test func queueAdvancesRealPlaybackAcrossDuplicateOccurrences() async throws {
+        let media = try fixture()
+        defer { try? FileManager.default.removeItem(at: media.url) }
+        let source = try LocalFileSource(resources: [media.id: media])
+        let kit = try Cadenza(configuration: .init(defaultProvider: source.identifier), providers: [source])
+        let queue = kit.makeQueue(backend: AVPlayerBackend())
+        let a = QueueEntry(id: UUID(), mediaID: media.id), b = QueueEntry(id: UUID(), mediaID: media.id)
+        try queue.insert(a, at: 0)
+        try queue.insert(b, at: 1)
+        try await queue.play()
+        let clock = ContinuousClock()
+        let deadline = clock.now.advanced(by: .seconds(10))
+        while !(queue.currentEntryID == b.id && queue.snapshot.state == .ended), clock.now < deadline {
+            try await clock.sleep(for: .milliseconds(20))
+            try await queue.refresh()
+        }
+        #expect(queue.history == [a.id, b.id])
+        #expect(queue.snapshot.state == .ended)
+        queue.stop()
+    }
 }

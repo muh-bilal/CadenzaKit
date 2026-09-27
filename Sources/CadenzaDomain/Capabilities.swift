@@ -9,11 +9,13 @@ public struct FeatureFlags: Equatable, Sendable {
     public var sourceResolution: Bool
     public var playback: Bool
     public var seeking: Bool
+    public var queueManagement: Bool
 
-    public init(sourceResolution: Bool = true, playback: Bool = true, seeking: Bool = true) {
+    public init(sourceResolution: Bool = true, playback: Bool = true, seeking: Bool = true, queueManagement: Bool = true) {
         self.sourceResolution = sourceResolution
         self.playback = playback
         self.seeking = seeking
+        self.queueManagement = queueManagement
     }
 
     public func isEnabled(_ feature: Feature) -> Bool {

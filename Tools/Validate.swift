@@ -3,6 +3,7 @@ import Foundation
 // Run from the repository root: swift Tools/Validate.swift Local
 // This orchestration utility is not shipped in an SDK product.
 struct ValidationFailure: Error { let message: String }
+do {
 let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
 let runName = CommandLine.arguments.dropFirst().first ?? "Manual"
 let artifacts = root.appendingPathComponent(".build/validation/\(runName)")
@@ -89,3 +90,7 @@ for (name, destination) in destinations {
 }
 try run(["git", "diff", "--check"], log: "diff-check.log")
 print("Validation passed; review the diff and evidence before committing.")
+} catch {
+    print("Validation failed: \(error)")
+    exit(1)
+}

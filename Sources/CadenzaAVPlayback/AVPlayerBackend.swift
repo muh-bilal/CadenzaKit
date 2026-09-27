@@ -9,6 +9,8 @@ public final class AVPlayerBackend: PlaybackBackend {
     private let player = AVPlayer()
     private var generation: UInt64 = 0
     private var duration: Double = 0
+    private var reachedEnd = false
+    private var endObserver: PlaybackEndObserver?
 
     public init() {}
 
@@ -24,7 +26,14 @@ public final class AVPlayerBackend: PlaybackBackend {
         guard playable else { throw CadenzaError.unsupportedMedia }
         let seconds = time.seconds
         guard seconds.isFinite, seconds > 0 else { throw CadenzaError.invalidDuration }
-        player.replaceCurrentItem(with: AVPlayerItem(asset: asset))
+        let item = AVPlayerItem(asset: asset)
+        let observer = PlaybackEndObserver { [weak self] in
+            guard let self, self.generation == token else { return }
+            self.reachedEnd = true
+        }
+        NotificationCenter.default.addObserver(observer, selector: #selector(PlaybackEndObserver.didEnd), name: .AVPlayerItemDidPlayToEndTime, object: item)
+        endObserver = observer
+        player.replaceCurrentItem(with: item)
         duration = seconds
         return seconds
     }
@@ -45,10 +54,14 @@ public final class AVPlayerBackend: PlaybackBackend {
         try Task.checkCancellation()
         guard token == generation else { throw CancellationError() }
         guard completed else { throw CadenzaError.playbackFailure("seekInterrupted") }
+        reachedEnd = position == duration
     }
 
     public func stop() {
         generation &+= 1
+        if let endObserver { NotificationCenter.default.removeObserver(endObserver) }
+        endObserver = nil
+        reachedEnd = false
         player.pause()
         player.replaceCurrentItem(with: nil)
         duration = 0
@@ -60,6 +73,22 @@ public final class AVPlayerBackend: PlaybackBackend {
         let position = player.currentTime().seconds
         return BackendStatus(position: position.isFinite ? max(0, position) : 0,
                              isPlaying: player.rate != 0,
-                             ended: position >= duration)
+                             ended: reachedEnd)
+    }
+}
+
+/// Notification callbacks can arrive off-main. Only a Sendable actor-isolated
+/// observer is captured by the task; no Notification or AVPlayerItem crosses actors.
+@MainActor
+private final class PlaybackEndObserver: NSObject {
+    private let onEnd: @MainActor () -> Void
+
+    init(onEnd: @escaping @MainActor () -> Void) {
+        self.onEnd = onEnd
+        super.init()
+    }
+
+    @objc nonisolated func didEnd() {
+        Task { @MainActor [weak self] in self?.onEnd() }
     }
 }

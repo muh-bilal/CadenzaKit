@@ -49,6 +49,11 @@ public struct Cadenza: Sendable {
         PlaybackSession(kit: self, backend: backend)
     }
 
+    @MainActor
+    public func makeQueue(backend: any PlaybackBackend) -> PlaybackQueue {
+        PlaybackQueue(session: makeSession(backend: backend), enabled: configuration.features.queueManagement)
+    }
+
     public func resolve(_ id: MediaID, provider identifier: String? = nil) async throws -> MediaResource {
         try Task.checkCancellation()
         let identifier = identifier ?? configuration.defaultProvider
