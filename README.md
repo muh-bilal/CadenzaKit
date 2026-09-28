@@ -93,6 +93,15 @@ backend, platform and route checks. History is session-local; durable history is
 not claimed. The caller owns refresh cadence. Queue edits are rejected during
 pending operations, and `stop()` invalidates pending selections.
 
+`setShuffle(true)` permutes unvisited occurrence IDs without changing `entries`.
+Backward/forward history takes precedence over new shuffled choices. New entries
+join the remaining permutation; deletions remove them. Disabling shuffle restores
+canonical next-entry ordering and preserves history. A completed cycle does not
+silently restart. Explicit entry selection may intentionally replay a visited item.
+Configure `FeatureFlags.shuffle` at facade initialization; inject a generator with
+`makeQueue(backend:random:)` for reproducible tests. `CadenzaTesting` provides
+`SeededRandomGenerator`; production defaults to `SystemRandomNumberGenerator`.
+
 The package has no external dependencies, UI requirement, bundled media, fonts,
 or icon packs. SDK resources, when introduced, are limited to localization.
 The repository license is pending the owner's explicit choice; no distribution

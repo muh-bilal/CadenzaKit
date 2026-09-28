@@ -50,8 +50,8 @@ public struct Cadenza: Sendable {
     }
 
     @MainActor
-    public func makeQueue(backend: any PlaybackBackend) -> PlaybackQueue {
-        PlaybackQueue(session: makeSession(backend: backend), enabled: configuration.features.queueManagement)
+    public func makeQueue(backend: any PlaybackBackend, random: any RandomNumberGenerator = SystemRandomNumberGenerator()) -> PlaybackQueue {
+        PlaybackQueue(session: makeSession(backend: backend), flags: configuration.features, random: random)
     }
 
     public func resolve(_ id: MediaID, provider identifier: String? = nil) async throws -> MediaResource {

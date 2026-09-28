@@ -8,15 +8,24 @@ public final class PlaybackQueue {
     public private(set) var entries: [QueueEntry] = []
     public private(set) var currentEntryID: UUID?
     public private(set) var history: [UUID] = []
+    public private(set) var isShuffleEnabled = false
+    private var shuffleOrder: [UUID] = []
+    private var visited: Set<UUID> = []
     private var historyIndex: Int?
     private let session: PlaybackSession
-    private let enabled: Bool
+    private let flags: FeatureFlags
+    private struct Randomness: RandomNumberGenerator {
+        var base: any RandomNumberGenerator
+        mutating func next() -> UInt64 { base.next() }
+    }
+    private var random: Randomness
     private var busy = false
     private var generation: UInt64 = 0
 
-    init(session: PlaybackSession, enabled: Bool) {
+    init(session: PlaybackSession, flags: FeatureFlags, random: any RandomNumberGenerator) {
         self.session = session
-        self.enabled = enabled
+        self.flags = flags
+        self.random = Randomness(base: random)
     }
 
     public var snapshot: PlaybackSnapshot { session.snapshot }
@@ -26,6 +35,7 @@ public final class PlaybackQueue {
         guard (0...entries.count).contains(index) else { throw CadenzaError.invalidQueueIndex }
         guard !entries.contains(where: { $0.id == entry.id }) else { throw CadenzaError.duplicateQueueEntry }
         entries.insert(entry, at: index)
+        if isShuffleEnabled { shuffleOrder.insert(entry.id, at: Int.random(in: 0...shuffleOrder.count, using: &random)) }
     }
 
     public func move(_ id: UUID, to index: Int) throws {
@@ -39,6 +49,8 @@ public final class PlaybackQueue {
         try checkMutation()
         guard let index = entries.firstIndex(where: { $0.id == id }) else { throw CadenzaError.queueEntryNotFound }
         entries.remove(at: index)
+        shuffleOrder.removeAll { $0 == id }
+        visited.remove(id)
         let visitedCount = history.prefix((historyIndex ?? -1) + 1).filter { $0 != id }.count
         history.removeAll { $0 == id }
         historyIndex = visitedCount > 0 ? visitedCount - 1 : nil
@@ -54,8 +66,17 @@ public final class PlaybackQueue {
             try await session.play()
             return
         }
-        guard let selected = id ?? entries.first?.id else { throw CadenzaError.emptyQueue }
+        guard !entries.isEmpty else { throw CadenzaError.emptyQueue }
+        guard let selected = id ?? (isShuffleEnabled ? shuffleOrder.first : entries.first?.id) else { throw CadenzaError.noNextEntry }
         try await select(selected, historyPosition: nil)
+    }
+
+    public func setShuffle(_ enabled: Bool) throws {
+        try checkMutation()
+        guard !enabled || flags.shuffle else { throw CadenzaError.shuffleDisabled }
+        guard enabled != isShuffleEnabled else { return }
+        isShuffleEnabled = enabled
+        shuffleOrder = enabled ? entries.map(\.id).filter { !visited.contains($0) }.shuffled(using: &random) : []
     }
 
     public func next() async throws {
@@ -63,6 +84,11 @@ public final class PlaybackQueue {
         guard !entries.isEmpty else { throw CadenzaError.emptyQueue }
         if let historyIndex, historyIndex + 1 < history.count {
             try await select(history[historyIndex + 1], historyPosition: historyIndex + 1)
+            return
+        }
+        if isShuffleEnabled {
+            guard let next = shuffleOrder.first else { throw CadenzaError.noNextEntry }
+            try await select(next, historyPosition: nil)
             return
         }
         let index = entries.firstIndex { $0.id == currentEntryID }.map { $0 + 1 } ?? 0
@@ -109,7 +135,7 @@ public final class PlaybackQueue {
     }
 
     private func checkMutation() throws {
-        guard enabled else { throw CadenzaError.queueDisabled }
+        guard flags.queueManagement else { throw CadenzaError.queueDisabled }
         guard !busy else { throw CadenzaError.operationInProgress }
     }
 
@@ -125,6 +151,8 @@ public final class PlaybackQueue {
             try await session.play()
             guard token == generation else { throw CancellationError() }
             currentEntryID = id
+            visited.insert(id)
+            shuffleOrder.removeAll { $0 == id }
             if let historyPosition {
                 historyIndex = historyPosition
             } else {
