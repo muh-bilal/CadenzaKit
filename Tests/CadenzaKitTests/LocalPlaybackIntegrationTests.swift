@@ -117,4 +117,29 @@ struct LocalPlaybackIntegrationTests {
         #expect(queue.snapshot.state == .ended)
         queue.stop()
     }
+
+    @Test func repeatOneRestartsRealPlayerWithoutDuplicateHistory() async throws {
+        let media = try fixture()
+        defer { try? FileManager.default.removeItem(at: media.url) }
+        let source = try LocalFileSource(resources: [media.id: media])
+        let kit = try Cadenza(configuration: .init(defaultProvider: source.identifier), providers: [source])
+        let queue = kit.makeQueue(backend: AVPlayerBackend())
+        try queue.insert(QueueEntry(id: UUID(), mediaID: media.id), at: 0)
+        try queue.setRepeat(.one)
+        try await queue.play()
+        let clock = ContinuousClock()
+        let deadline = clock.now.advanced(by: .seconds(10))
+        var restarts = 0
+        var lastPosition = 0.0
+        while restarts < 2, clock.now < deadline {
+            try await clock.sleep(for: .milliseconds(20))
+            try await queue.refresh()
+            if lastPosition - queue.snapshot.position > 0.2 { restarts += 1 }
+            lastPosition = queue.snapshot.position
+        }
+        #expect(restarts == 2)
+        #expect(queue.history.count == 1)
+        #expect(queue.snapshot.state == .playing)
+        queue.stop()
+    }
 }

@@ -11,13 +11,15 @@ public struct FeatureFlags: Equatable, Sendable {
     public var seeking: Bool
     public var queueManagement: Bool
     public var shuffle: Bool
+    public var repeatPlayback: Bool
 
-    public init(sourceResolution: Bool = true, playback: Bool = true, seeking: Bool = true, queueManagement: Bool = true, shuffle: Bool = true) {
+    public init(sourceResolution: Bool = true, playback: Bool = true, seeking: Bool = true, queueManagement: Bool = true, shuffle: Bool = true, repeatPlayback: Bool = true) {
         self.sourceResolution = sourceResolution
         self.playback = playback
         self.seeking = seeking
         self.queueManagement = queueManagement
         self.shuffle = shuffle
+        self.repeatPlayback = repeatPlayback
     }
 
     public func isEnabled(_ feature: Feature) -> Bool {

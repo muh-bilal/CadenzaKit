@@ -9,6 +9,7 @@ public final class PlaybackQueue {
     public private(set) var currentEntryID: UUID?
     public private(set) var history: [UUID] = []
     public private(set) var isShuffleEnabled = false
+    public private(set) var repeatMode: RepeatMode = .off
     private var shuffleOrder: [UUID] = []
     private var visited: Set<UUID> = []
     private var historyIndex: Int?
@@ -79,6 +80,12 @@ public final class PlaybackQueue {
         shuffleOrder = enabled ? entries.map(\.id).filter { !visited.contains($0) }.shuffled(using: &random) : []
     }
 
+    public func setRepeat(_ mode: RepeatMode) throws {
+        try checkMutation()
+        guard mode == .off || flags.repeatPlayback else { throw CadenzaError.repeatDisabled }
+        repeatMode = mode
+    }
+
     public func next() async throws {
         try checkMutation()
         guard !entries.isEmpty else { throw CadenzaError.emptyQueue }
@@ -87,11 +94,19 @@ public final class PlaybackQueue {
             return
         }
         if isShuffleEnabled {
+            if shuffleOrder.isEmpty, repeatMode == .all {
+                visited.removeAll()
+                shuffleOrder = entries.map(\.id).shuffled(using: &random)
+                if shuffleOrder.count > 1, shuffleOrder.first == currentEntryID {
+                    shuffleOrder.swapAt(0, Int.random(in: 1..<shuffleOrder.count, using: &random))
+                }
+            }
             guard let next = shuffleOrder.first else { throw CadenzaError.noNextEntry }
             try await select(next, historyPosition: nil)
             return
         }
-        let index = entries.firstIndex { $0.id == currentEntryID }.map { $0 + 1 } ?? 0
+        var index = entries.firstIndex { $0.id == currentEntryID }.map { $0 + 1 } ?? 0
+        if index == entries.count, repeatMode == .all { index = 0; visited.removeAll() }
         guard entries.indices.contains(index) else { throw CadenzaError.noNextEntry }
         try await select(entries[index].id, historyPosition: nil)
     }
@@ -129,6 +144,10 @@ public final class PlaybackQueue {
         guard currentEntryID != nil else { return }
         try session.refresh()
         if snapshot.state == .ended {
+            if repeatMode == .one {
+                try await play()
+                return
+            }
             do { try await next() }
             catch CadenzaError.noNextEntry { /* Keep the final ended item selected. */ }
         }

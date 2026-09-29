@@ -102,6 +102,13 @@ Configure `FeatureFlags.shuffle` at facade initialization; inject a generator wi
 `makeQueue(backend:random:)` for reproducible tests. `CadenzaTesting` provides
 `SeededRandomGenerator`; production defaults to `SystemRandomNumberGenerator`.
 
+`setRepeat(.one)` restarts the selected item at EOF without adding duplicate
+history entries; manual next still advances. `setRepeat(.all)` wraps canonical
+order or starts a fresh shuffle cycle. Shuffle repeat avoids immediate boundary
+repetition unless only one entry exists. `.off` restores finite traversal.
+`FeatureFlags.repeatPlayback` gates activation. Repeat-one requires live seeking
+and playback capabilities and reports a structured error if they are unavailable.
+
 The package has no external dependencies, UI requirement, bundled media, fonts,
 or icon packs. SDK resources, when introduced, are limited to localization.
 The repository license is pending the owner's explicit choice; no distribution

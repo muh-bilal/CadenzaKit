@@ -1,5 +1,11 @@
 import Foundation
 
+public enum RepeatMode: String, CaseIterable, Sendable {
+    case off
+    case one
+    case all
+}
+
 /// An occurrence, not a track identity. Duplicate tracks have different entry IDs.
 public struct QueueEntry: Identifiable, Equatable, Sendable, Codable {
     public let id: UUID
