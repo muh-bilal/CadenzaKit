@@ -4,6 +4,7 @@ import CadenzaDomain
 /// no hidden polling timer or playback task is started by constructing a session.
 @MainActor
 public final class PlaybackSession {
+    public private(set) var loopRange: LoopRange?
     private let kit: Cadenza
     private let backend: any PlaybackBackend
     private var generation: UInt64 = 0
@@ -65,7 +66,7 @@ public final class PlaybackSession {
         guard !busy else { throw CadenzaError.operationInProgress }
         try requireLoaded()
         backend.pause()
-        try refresh()
+        try sample()
         if state != .ended { state = .paused }
     }
 
@@ -92,9 +93,44 @@ public final class PlaybackSession {
         duration = 0
         position = 0
         state = .idle
+        loopRange = nil
     }
 
-    public func refresh() throws {
+    public func setLoop(_ range: LoopRange?) async throws {
+        try Task.checkCancellation()
+        guard !busy else { throw CadenzaError.operationInProgress }
+        guard let range else { loopRange = nil; return }
+        guard kit.configuration.features.abLooping else { throw CadenzaError.loopingDisabled }
+        try requireLoaded()
+        guard range.end <= duration else { throw CadenzaError.invalidLoopRange }
+        try await perform(.seeking) { _ in self.loopRange = range }
+    }
+
+    public func refresh() async throws {
+        let wasPlaying = state == .playing
+        try sample()
+        if let range = loopRange, wasPlaying, state == .ended || position >= range.end || position < range.start {
+            let token = generation
+            do {
+                try await perform(.seeking, also: [.playback]) { token in
+                    try await self.backend.seek(to: range.start)
+                    try self.check(token)
+                    self.position = range.start
+                    try self.backend.play()
+                    self.state = .playing
+                }
+            } catch {
+                if token == generation {
+                    backend.pause()
+                    if case .failed = state { /* Preserve the structured backend failure. */ }
+                    else { state = .paused }
+                }
+                throw error
+            }
+        }
+    }
+
+    private func sample() throws {
         guard !busy else { throw CadenzaError.operationInProgress }
         try requireLoaded()
         do {

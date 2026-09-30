@@ -70,7 +70,7 @@ struct LocalPlaybackIntegrationTests {
         let deadline = clock.now.advanced(by: .seconds(10))
         while session.snapshot.state != .ended, clock.now < deadline {
             try await clock.sleep(for: .milliseconds(20))
-            try session.refresh()
+            try await session.refresh()
         }
         #expect(session.snapshot.state == .ended)
         #expect(session.snapshot.position >= 0.49)
@@ -141,5 +141,33 @@ struct LocalPlaybackIntegrationTests {
         #expect(queue.history.count == 1)
         #expect(queue.snapshot.state == .playing)
         queue.stop()
+    }
+
+    @Test(arguments: [0.3, 0.5]) func abLoopSeeksRealPlayerWithinRefreshTolerance(end: Double) async throws {
+        let media = try fixture()
+        defer { try? FileManager.default.removeItem(at: media.url) }
+        let source = try LocalFileSource(resources: [media.id: media])
+        let kit = try Cadenza(configuration: .init(defaultProvider: source.identifier), providers: [source])
+        let session = kit.makeSession(backend: AVPlayerBackend())
+        try await session.load(media.id)
+        try await session.setLoop(LoopRange(start: 0.1, end: end))
+        try await session.play()
+        let clock = ContinuousClock()
+        let deadline = clock.now.advanced(by: .seconds(10))
+        var wraps = 0
+        var lastPosition = 0.0
+        while wraps < 3, clock.now < deadline {
+            try await clock.sleep(for: .milliseconds(20))
+            try await session.refresh()
+            if lastPosition - session.snapshot.position > 0.1 {
+                wraps += 1
+                #expect(abs(session.snapshot.position - 0.1) < 0.02)
+            }
+            lastPosition = session.snapshot.position
+        }
+        #expect(wraps == 3)
+        try session.pause()
+        #expect(session.snapshot.state == .paused)
+        session.stop()
     }
 }

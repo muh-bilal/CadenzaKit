@@ -60,6 +60,8 @@ public enum CadenzaError: Error, Equatable, Sendable {
     case noPreviousEntry
     case shuffleDisabled
     case repeatDisabled
+    case loopingDisabled
+    case invalidLoopRange
 }
 
 /// Implementations must cooperate with task cancellation and support concurrent calls.

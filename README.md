@@ -61,7 +61,7 @@ let kit = try Cadenza(configuration: .init(defaultProvider: source.identifier), 
 let session = kit.makeSession(backend: AVPlayerBackend())
 try await session.load(id)
 try await session.play()
-try session.refresh()
+try await session.refresh()
 let snapshot = session.snapshot
 ```
 
@@ -108,6 +108,18 @@ order or starts a fresh shuffle cycle. Shuffle repeat avoids immediate boundary
 repetition unless only one entry exists. `.off` restores finite traversal.
 `FeatureFlags.repeatPlayback` gates activation. Repeat-one requires live seeking
 and playback capabilities and reports a structured error if they are unavailable.
+
+## A–B looping
+
+`try await session.setLoop(LoopRange(start: a, end: b))` enables a finite interval
+within the loaded media. The queue exposes the same operation. Pass `nil` to clear.
+`FeatureFlags.abLooping` gates activation; each boundary crossing checks live
+seeking/playback capabilities. A denied loop pauses safely. Paused sessions do not
+restart; stop and media replacement clear the range. A loop ending at EOF takes
+precedence over queue/repeat advancement. `refresh()` is async because it can seek;
+hosts choose its cadence. AVPlayer looping is not sample-accurate or guaranteed
+gapless: timing depends on refresh cadence and actual seek latency. Integration
+tests use a 20 ms refresh interval and check landing within 20 ms of A.
 
 The package has no external dependencies, UI requirement, bundled media, fonts,
 or icon packs. SDK resources, when introduced, are limited to localization.

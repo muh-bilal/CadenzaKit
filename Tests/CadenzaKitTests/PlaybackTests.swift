@@ -13,6 +13,7 @@ struct PlaybackTests {
         var playing = false
         var ended = false
         var failure: (any Error)?
+        var seekFailure: (any Error)?
         var gate: Gate?
         var seekGate: Gate?
         var stopCount = 0
@@ -29,6 +30,7 @@ struct PlaybackTests {
         func pause() { playing = false }
         func seek(to position: Double) async throws {
             if let seekGate { await seekGate.wait() }
+            if let seekFailure { throw seekFailure }
             if let failure { throw failure }
             self.position = position
             ended = position == duration
@@ -70,14 +72,14 @@ struct PlaybackTests {
         #expect(session.snapshot == PlaybackSnapshot(state: .idle, resource: nil, position: 0, duration: 0))
         await #expect(throws: CadenzaError.noMediaLoaded) { try await session.play() }
         #expect(throws: CadenzaError.noMediaLoaded) { try session.pause() }
-        #expect(throws: CadenzaError.noMediaLoaded) { try session.refresh() }
+        await #expect(throws: CadenzaError.noMediaLoaded) { try await session.refresh() }
         try await session.load(MediaID("track"))
         #expect(session.snapshot.state == .ready)
         #expect(session.snapshot.duration == 10)
         try await session.play()
         #expect(session.snapshot.state == .playing)
         backend.position = 3
-        try session.refresh()
+        try await session.refresh()
         #expect(session.snapshot.position == 3)
         try session.pause()
         #expect(session.snapshot.state == .paused)
@@ -91,7 +93,7 @@ struct PlaybackTests {
         #expect(session.snapshot.state == .paused)
         backend.ended = true
         backend.position = 11
-        try session.refresh()
+        try await session.refresh()
         #expect(session.snapshot.position == 10)
         try await session.play()
         #expect(session.snapshot.state == .playing)
@@ -144,11 +146,11 @@ struct PlaybackTests {
         backend.failure = nil
         try await session.load(id)
         backend.position = .nan
-        #expect(throws: CadenzaError.invalidPosition) { try session.refresh() }
+        await #expect(throws: CadenzaError.invalidPosition) { try await session.refresh() }
         backend.position = 0
         try await session.load(id)
         backend.failure = Failure()
-        #expect(throws: CadenzaError.playbackFailure("device")) { try session.refresh() }
+        await #expect(throws: CadenzaError.playbackFailure("device")) { try await session.refresh() }
     }
 
     @Test func replayCannotBypassDisabledSeeking() async throws {
@@ -157,7 +159,7 @@ struct PlaybackTests {
         try await session.load(MediaID("track"))
         backend.ended = true
         backend.position = 10
-        try session.refresh()
+        try await session.refresh()
         await #expect(throws: CadenzaError.featureUnavailable(.seeking, .disabled)) { try await session.play() }
         #expect(session.snapshot.state == .ended)
     }
@@ -177,7 +179,7 @@ struct PlaybackTests {
         backend.seekGate = nil
         try await session.load(MediaID("old"))
         backend.ended = true
-        try session.refresh()
+        try await session.refresh()
         let replayGate = Gate()
         backend.seekGate = replayGate
         let replay = Task { try await session.play() }
@@ -202,7 +204,7 @@ struct PlaybackTests {
         await #expect(throws: CadenzaError.operationInProgress) { try await session.load(id) }
         await #expect(throws: CadenzaError.operationInProgress) { try await session.play() }
         #expect(throws: CadenzaError.operationInProgress) { try session.pause() }
-        #expect(throws: CadenzaError.operationInProgress) { try session.refresh() }
+        await #expect(throws: CadenzaError.operationInProgress) { try await session.refresh() }
         session.stop()
         backend.gate = nil
         try await session.load(MediaID("new"))

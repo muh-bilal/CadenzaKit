@@ -30,6 +30,15 @@ public final class PlaybackQueue {
     }
 
     public var snapshot: PlaybackSnapshot { session.snapshot }
+    public var loopRange: LoopRange? { session.loopRange }
+
+    public func setLoop(_ range: LoopRange?) async throws {
+        try checkMutation()
+        busy = true
+        let token = generation
+        defer { if token == generation { busy = false } }
+        try await session.setLoop(range)
+    }
 
     public func insert(_ entry: QueueEntry, at index: Int) throws {
         try checkMutation()
@@ -142,7 +151,12 @@ public final class PlaybackQueue {
     public func refresh() async throws {
         try checkMutation()
         guard currentEntryID != nil else { return }
-        try session.refresh()
+        busy = true
+        let token = generation
+        defer { if token == generation { busy = false } }
+        try await session.refresh()
+        guard token == generation else { throw CancellationError() }
+        busy = false
         if snapshot.state == .ended {
             if repeatMode == .one {
                 try await play()
