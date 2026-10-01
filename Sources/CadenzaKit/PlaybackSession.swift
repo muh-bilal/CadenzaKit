@@ -24,7 +24,12 @@ public final class PlaybackSession {
         PlaybackSnapshot(state: state, resource: resource, position: position, duration: duration)
     }
 
-    public func load(_ id: MediaID, provider: String? = nil) async throws {
+    public var sourceProvider: String? {
+        resource == nil ? nil : (provider ?? kit.configuration.defaultProvider)
+    }
+
+    /// Optional resume seek and autoplay belong to the same serialized operation.
+    public func load(_ id: MediaID, provider: String? = nil, at resumePosition: Double? = nil, autoplay: Bool = false) async throws {
         try Task.checkCancellation()
         guard !busy else { throw CadenzaError.operationInProgress }
         stop()
@@ -41,9 +46,22 @@ public final class PlaybackSession {
             let loadedDuration = try await backend.load(media)
             try check(token)
             guard loadedDuration.isFinite, loadedDuration > 0 else { throw CadenzaError.invalidDuration }
+            if let resumePosition {
+                guard resumePosition.isFinite, resumePosition >= 0, resumePosition <= loadedDuration else { throw CadenzaError.invalidPosition }
+                try await authorize(.seeking)
+                try check(token)
+                try await backend.seek(to: resumePosition)
+                try check(token)
+                position = resumePosition
+            }
+            if autoplay {
+                try await authorize(.playback)
+                try check(token)
+                try backend.play()
+            }
             resource = media
             duration = loadedDuration
-            state = .ready
+            state = autoplay ? .playing : .ready
         } catch {
             try fail(error, token: token)
         }

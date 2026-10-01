@@ -5,6 +5,7 @@ import CadenzaDomain
 import CadenzaKit
 import CadenzaLocalSources
 import CadenzaAVPlayback
+import CadenzaPersistence
 
 @MainActor
 struct LocalPlaybackIntegrationTests {
@@ -169,5 +170,35 @@ struct LocalPlaybackIntegrationTests {
         try session.pause()
         #expect(session.snapshot.state == .paused)
         session.stop()
+    }
+
+    @Test(arguments: [false, true]) func bookmarkResumesRealPlayerAfterStoreRecreation(preferences: Bool) async throws {
+        let media = try fixture()
+        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let suite = "CadenzaResume." + UUID().uuidString
+        defer {
+            try? FileManager.default.removeItem(at: media.url)
+            try? FileManager.default.removeItem(at: fileURL)
+            UserDefaults(suiteName: suite)?.removePersistentDomain(forName: suite)
+        }
+        func makeStore() throws -> any DocumentStore {
+            if preferences { return try PreferencesDocumentStore(suiteName: suite, key: "bookmarks") }
+            return try AtomicFileStore(fileURL: fileURL)
+        }
+        let source = try LocalFileSource(resources: [media.id: media])
+        let kit = try Cadenza(configuration: .init(defaultProvider: source.identifier), providers: [source])
+        let session = kit.makeSession(backend: AVPlayerBackend())
+        try await session.load(media.id)
+        try await session.seek(to: 0.2)
+        let bookmarks = kit.makeBookmarks(store: try makeStore())
+        let saved = try await bookmarks.capture(id: UUID(), title: "Resume", from: session)
+        session.stop()
+        let restored = kit.makeSession(backend: AVPlayerBackend())
+        try await kit.makeBookmarks(store: makeStore()).resume(saved.id, in: restored)
+        try await restored.refresh()
+        #expect(abs(restored.snapshot.position - 0.2) < 0.02)
+        #expect(restored.snapshot.state == .ready)
+        #expect(restored.snapshot.resource?.id == media.id)
+        restored.stop()
     }
 }

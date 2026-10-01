@@ -62,6 +62,15 @@ public enum CadenzaError: Error, Equatable, Sendable {
     case repeatDisabled
     case loopingDisabled
     case invalidLoopRange
+    case bookmarksDisabled
+    case persistenceDisabled
+    case invalidBookmark
+    case bookmarkNotFound
+    case corruptStore
+    case unsupportedStoreVersion(Int)
+    case storageFailure(String)
+    case storageLimitExceeded
+    case invalidStorageConfiguration
 }
 
 /// Implementations must cooperate with task cancellation and support concurrent calls.

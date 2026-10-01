@@ -1,4 +1,5 @@
 import CadenzaDomain
+import Foundation
 
 /// UI-independent entry point. Providers are supplied by the host application.
 public struct Cadenza: Sendable {
@@ -47,6 +48,10 @@ public struct Cadenza: Sendable {
     @MainActor
     public func makeSession(backend: any PlaybackBackend) -> PlaybackSession {
         PlaybackSession(kit: self, backend: backend)
+    }
+
+    public func makeBookmarks(store: any DocumentStore, now: @escaping @Sendable () -> Date = { Date() }) -> BookmarkService {
+        BookmarkService(flags: configuration.features, store: store, now: now)
     }
 
     @MainActor

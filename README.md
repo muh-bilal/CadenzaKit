@@ -13,6 +13,7 @@ Swift 6 concurrency checking is enabled.
 - `CadenzaTesting`: closure-based source providers for host tests.
 - `CadenzaLocalSources`: explicit local-file catalog with identity and access checks.
 - `CadenzaAVPlayback`: local AVPlayer adapter, injected into a deterministic session.
+- `CadenzaPersistence`: transactional atomic-file and bounded preferences stores.
 
 Resolution alone does not assert that a URL is playable. Loading through the
 backend validates media; the host owns file permissions/security-scoped access.
@@ -122,6 +123,33 @@ gapless: timing depends on refresh cadence and actual seek latency. Integration
 tests use a 20 ms refresh interval and check landing within 20 ms of A.
 
 The package has no external dependencies, UI requirement, bundled media, fonts,
-or icon packs. SDK resources, when introduced, are limited to localization.
+or icon packs. SDK resources are localization and required privacy metadata.
 The repository license is pending the owner's explicit choice; no distribution
 license or publication permission is implied.
+
+## Persistent position bookmarks
+
+`kit.makeBookmarks(store:now:)` creates a service with injected document storage
+and time. `save`, `all`, `bookmark`, and `remove` provide named bookmark CRUD;
+`capture` saves a session's actual sampled position. `resume(_:in:autoplay:)`
+loads and seeks in one serialized session operation, defaulting to no autoplay.
+Multiple named bookmarks can reference the same track. A shortened/missing asset
+or unavailable seeking capability produces a structured error rather than silently
+clamping the bookmark. `bookmarks` and `persistence` flags are enforced before I/O.
+
+Use `AtomicFileStore(fileURL:)` in host-selected Application Support storage on
+iOS/macOS. `PreferencesDocumentStore(suiteName:key:maximumBytes:)` supports small
+tvOS documents, bounding the entire named suite to at most 256 KiB. Use a dedicated
+host-owned suite and budget the app's other defaults usage separately. tvOS file
+cache storage is purgeable and is not a durable bookmark store. Preferences writes
+flush asynchronously; neither adapter promises physical-disk fsync or survival of
+device failure/uninstall. [Apple tvOS storage guidance](https://developer.apple.com/videos/play/wwdc2023/10256/)
+and [defaults limits](https://developer.apple.com/documentation/foundation/userdefaults/sizelimitexceedednotification).
+
+All services for one document must share one store actor. Transform failures and
+pre-commit cancellation preserve the previous document; cancellation after the
+synchronous commit boundary does not undo a successful write. Cross-process writers
+are not supported. Bookmarks use a version-1 JSON archive, validate decoded values,
+reject duplicate IDs/future schemas, and preserve corrupt bytes for host recovery.
+Tests recreate stores/sessions and read real persisted data on every platform;
+device reboot, power-loss durability, and tvOS purge behavior are not claimed tested.
