@@ -153,3 +153,13 @@ are not supported. Bookmarks use a version-1 JSON archive, validate decoded valu
 reject duplicate IDs/future schemas, and preserve corrupt bytes for host recovery.
 Tests recreate stores/sessions and read real persisted data on every platform;
 device reboot, power-loss durability, and tvOS purge behavior are not claimed tested.
+
+## Persistent playlists
+
+`kit.makePlaylists(store:now:)` provides `create`, `playlist`, `all`, `rename`, and
+`delete`. Use a separate document/key from bookmarks. Playlist IDs are stable;
+display names may repeat, while empty/whitespace-only names and duplicate IDs are
+rejected. Listing uses deterministic name/UUID ordering. Transactions preserve
+unrelated playlists under concurrent edits. `playlists` and `persistence` flags
+gate every operation before storage access. The version-1 archive rejects unknown
+schemas and duplicate IDs without resetting data. Entry editing follows separately.

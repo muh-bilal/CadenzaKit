@@ -71,6 +71,10 @@ public enum CadenzaError: Error, Equatable, Sendable {
     case storageFailure(String)
     case storageLimitExceeded
     case invalidStorageConfiguration
+    case playlistsDisabled
+    case invalidPlaylist
+    case playlistNotFound
+    case duplicatePlaylist
 }
 
 /// Implementations must cooperate with task cancellation and support concurrent calls.

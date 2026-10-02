@@ -54,6 +54,10 @@ public struct Cadenza: Sendable {
         BookmarkService(flags: configuration.features, store: store, now: now)
     }
 
+    public func makePlaylists(store: any DocumentStore, now: @escaping @Sendable () -> Date = { Date() }) -> PlaylistService {
+        PlaylistService(flags: configuration.features, store: store, now: now)
+    }
+
     @MainActor
     public func makeQueue(backend: any PlaybackBackend, random: any RandomNumberGenerator = SystemRandomNumberGenerator()) -> PlaybackQueue {
         PlaybackQueue(session: makeSession(backend: backend), flags: configuration.features, random: random)
