@@ -161,5 +161,12 @@ device reboot, power-loss durability, and tvOS purge behavior are not claimed te
 display names may repeat, while empty/whitespace-only names and duplicate IDs are
 rejected. Listing uses deterministic name/UUID ordering. Transactions preserve
 unrelated playlists under concurrent edits. `playlists` and `persistence` flags
-gate every operation before storage access. The version-1 archive rejects unknown
-schemas and duplicate IDs without resetting data. Entry editing follows separately.
+gate every operation before storage access. The service reads version-1 metadata
+archives and writes version 2 on mutation; unknown schemas and duplicate IDs are
+rejected without resetting data. This prevents older clients from silently losing
+entry content. Version-1 reads alone do not rewrite the document.
+
+`insert(_:into:at:)`, `removeEntry(_:from:)`, and `moveEntry(_:in:to:)` edit ordered
+`QueueEntry` occurrences transactionally. Duplicate media IDs are permitted; entry
+UUIDs must be unique within a playlist. Rename preserves entries. Invalid indices,
+missing entries, cancellation before commit, and failed writes preserve prior data.

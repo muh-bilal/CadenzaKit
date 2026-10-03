@@ -75,6 +75,9 @@ public enum CadenzaError: Error, Equatable, Sendable {
     case invalidPlaylist
     case playlistNotFound
     case duplicatePlaylist
+    case duplicatePlaylistEntry
+    case playlistEntryNotFound
+    case invalidPlaylistIndex
 }
 
 /// Implementations must cooperate with task cancellation and support concurrent calls.

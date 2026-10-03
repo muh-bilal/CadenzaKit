@@ -46,7 +46,7 @@ public struct PlaylistService: Sendable {
         try await store.update { data in
             var archive = try Self.decode(data)
             guard let index = archive.playlists.firstIndex(where: { $0.id == id }) else { throw CadenzaError.playlistNotFound }
-            archive.playlists[index] = renamed
+            archive.playlists[index] = try Playlist(id: id, name: renamed.name, updatedAt: renamed.updatedAt, entries: archive.playlists[index].entries)
             return try Self.encode(archive)
         }
     }
@@ -61,6 +61,43 @@ public struct PlaylistService: Sendable {
         }
     }
 
+    public func insert(_ entry: QueueEntry, into playlistID: UUID, at index: Int) async throws {
+        try await edit(playlistID) { entries in
+            guard (0...entries.count).contains(index) else { throw CadenzaError.invalidPlaylistIndex }
+            guard !entries.contains(where: { $0.id == entry.id }) else { throw CadenzaError.duplicatePlaylistEntry }
+            entries.insert(entry, at: index)
+        }
+    }
+
+    public func removeEntry(_ entryID: UUID, from playlistID: UUID) async throws {
+        try await edit(playlistID) { entries in
+            guard let index = entries.firstIndex(where: { $0.id == entryID }) else { throw CadenzaError.playlistEntryNotFound }
+            entries.remove(at: index)
+        }
+    }
+
+    public func moveEntry(_ entryID: UUID, in playlistID: UUID, to index: Int) async throws {
+        try await edit(playlistID) { entries in
+            guard entries.indices.contains(index) else { throw CadenzaError.invalidPlaylistIndex }
+            guard let old = entries.firstIndex(where: { $0.id == entryID }) else { throw CadenzaError.playlistEntryNotFound }
+            entries.insert(entries.remove(at: old), at: index)
+        }
+    }
+
+    private func edit(_ id: UUID, mutation: @escaping @Sendable (inout [QueueEntry]) throws -> Void) async throws {
+        try authorize()
+        let timestamp = now()
+        try await store.update { data in
+            var archive = try Self.decode(data)
+            guard let index = archive.playlists.firstIndex(where: { $0.id == id }) else { throw CadenzaError.playlistNotFound }
+            let previous = archive.playlists[index]
+            var entries = previous.entries
+            try mutation(&entries)
+            archive.playlists[index] = try Playlist(id: id, name: previous.name, updatedAt: timestamp, entries: entries)
+            return try Self.encode(archive)
+        }
+    }
+
     private func authorize() throws {
         try Task.checkCancellation()
         guard flags.playlists else { throw CadenzaError.playlistsDisabled }
@@ -69,7 +106,7 @@ public struct PlaylistService: Sendable {
 
     private struct Header: Decodable { let version: Int }
     private struct Archive: Codable {
-        var version = 1
+        var version = 2
         var playlists: [Playlist] = []
     }
 
@@ -77,9 +114,10 @@ public struct PlaylistService: Sendable {
         guard let data else { return Archive() }
         do {
             let version = try JSONDecoder().decode(Header.self, from: data).version
-            guard version == 1 else { throw CadenzaError.unsupportedStoreVersion(version) }
-            let archive = try JSONDecoder().decode(Archive.self, from: data)
+            guard version == 1 || version == 2 else { throw CadenzaError.unsupportedStoreVersion(version) }
+            var archive = try JSONDecoder().decode(Archive.self, from: data)
             guard Set(archive.playlists.map(\.id)).count == archive.playlists.count else { throw CadenzaError.corruptStore }
+            archive.version = 2
             return archive
         } catch let error as CadenzaError { throw error }
         catch { throw CadenzaError.corruptStore }
