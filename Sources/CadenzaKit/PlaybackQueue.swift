@@ -68,6 +68,7 @@ public final class PlaybackQueue {
     }
 
     public func play(_ id: UUID? = nil) async throws {
+        try Task.checkCancellation()
         try checkMutation()
         if id == nil, currentEntryID != nil {
             busy = true
@@ -78,6 +79,26 @@ public final class PlaybackQueue {
         }
         guard !entries.isEmpty else { throw CadenzaError.emptyQueue }
         guard let selected = id ?? (isShuffleEnabled ? shuffleOrder.first : entries.first?.id) else { throw CadenzaError.noNextEntry }
+        try await select(selected, historyPosition: nil)
+    }
+
+    /// Validates before replacement, then owns an independent playback snapshot.
+    public func playEntries(_ replacement: [QueueEntry], startingAt id: UUID? = nil) async throws {
+        try Task.checkCancellation()
+        try checkMutation()
+        guard !replacement.isEmpty else { throw CadenzaError.emptyQueue }
+        guard Set(replacement.map(\.id)).count == replacement.count else { throw CadenzaError.duplicateQueueEntry }
+        if let id, !replacement.contains(where: { $0.id == id }) { throw CadenzaError.queueEntryNotFound }
+        stop()
+        entries = replacement
+        history = []
+        historyIndex = nil
+        visited = []
+        shuffleOrder = isShuffleEnabled ? entries.map(\.id).shuffled(using: &random) : []
+        let selected = id ?? (isShuffleEnabled ? shuffleOrder[0] : entries[0].id)
+        busy = true
+        let token = generation
+        defer { if token == generation { busy = false } }
         try await select(selected, historyPosition: nil)
     }
 
@@ -96,6 +117,7 @@ public final class PlaybackQueue {
     }
 
     public func next() async throws {
+        try Task.checkCancellation()
         try checkMutation()
         guard !entries.isEmpty else { throw CadenzaError.emptyQueue }
         if let historyIndex, historyIndex + 1 < history.count {
@@ -173,6 +195,7 @@ public final class PlaybackQueue {
     }
 
     private func select(_ id: UUID, historyPosition: Int?) async throws {
+        try Task.checkCancellation()
         guard let entry = entries.first(where: { $0.id == id }) else { throw CadenzaError.queueEntryNotFound }
         busy = true
         let token = generation

@@ -170,3 +170,11 @@ entry content. Version-1 reads alone do not rewrite the document.
 `QueueEntry` occurrences transactionally. Duplicate media IDs are permitted; entry
 UUIDs must be unique within a playlist. Rename preserves entries. Invalid indices,
 missing entries, cancellation before commit, and failed writes preserve prior data.
+
+`playlists.play(_:in:startingAt:)` starts an independent queue snapshot at the
+requested occurrence (or the first/shuffled entry). Later persistent edits or
+deletion do not mutate playback. Queue replacement validates IDs and empty input
+before stopping existing playback; cancelled requests do not replace it. Once a
+valid snapshot is installed, source/playback failure is surfaced with that snapshot
+retained, no selected entry, and no successful history entry. The host owns and
+cancels pending playlist-read tasks; queue stop invalidates selection once begun.

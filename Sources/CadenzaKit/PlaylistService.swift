@@ -27,6 +27,13 @@ public struct PlaylistService: Sendable {
         return playlist
     }
 
+    /// Later persistent edits do not mutate the active queue snapshot.
+    @MainActor
+    public func play(_ id: UUID, in queue: PlaybackQueue, startingAt entryID: UUID? = nil) async throws {
+        let playlist = try await playlist(id)
+        try await queue.playEntries(playlist.entries, startingAt: entryID)
+    }
+
     @discardableResult
     public func create(id: UUID, name: String) async throws -> Playlist {
         try authorize()

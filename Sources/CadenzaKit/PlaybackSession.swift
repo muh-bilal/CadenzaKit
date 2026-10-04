@@ -125,6 +125,7 @@ public final class PlaybackSession {
     }
 
     public func refresh() async throws {
+        try Task.checkCancellation()
         let wasPlaying = state == .playing
         try sample()
         if let range = loopRange, wasPlaying, state == .ended || position >= range.end || position < range.start {

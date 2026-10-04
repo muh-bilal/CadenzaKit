@@ -201,4 +201,32 @@ struct LocalPlaybackIntegrationTests {
         #expect(restored.snapshot.resource?.id == media.id)
         restored.stop()
     }
+
+    @Test func persistentPlaylistStartsSelectedOccurrenceInRealPlayer() async throws {
+        let media = try fixture()
+        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer {
+            try? FileManager.default.removeItem(at: media.url)
+            try? FileManager.default.removeItem(at: fileURL)
+        }
+        let source = try LocalFileSource(resources: [media.id: media])
+        let kit = try Cadenza(configuration: .init(defaultProvider: source.identifier), providers: [source])
+        let playlists = kit.makePlaylists(store: try AtomicFileStore(fileURL: fileURL))
+        let playlist = try await playlists.create(id: UUID(), name: "Real playback")
+        let a = QueueEntry(id: UUID(), mediaID: media.id), b = QueueEntry(id: UUID(), mediaID: media.id)
+        try await playlists.insert(a, into: playlist.id, at: 0)
+        try await playlists.insert(b, into: playlist.id, at: 1)
+        let queue = kit.makeQueue(backend: AVPlayerBackend())
+        try await playlists.play(playlist.id, in: queue, startingAt: b.id)
+        let clock = ContinuousClock()
+        let deadline = clock.now.advanced(by: .seconds(10))
+        while queue.snapshot.state != .ended, clock.now < deadline {
+            try await clock.sleep(for: .milliseconds(20))
+            try await queue.refresh()
+        }
+        #expect(queue.currentEntryID == b.id)
+        #expect(queue.history == [b.id])
+        #expect(queue.snapshot.state == .ended)
+        queue.stop()
+    }
 }
