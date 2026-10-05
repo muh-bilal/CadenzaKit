@@ -178,3 +178,12 @@ before stopping existing playback; cancelled requests do not replace it. Once a
 valid snapshot is installed, source/playback failure is surfaced with that snapshot
 retained, no selected entry, and no successful history entry. The host owns and
 cancels pending playlist-read tasks; queue stop invalidates selection once begun.
+
+`exportPlaylist(_:)` and `importPlaylist(_:as:)` use a separate interchange envelope
+`{"format":"CadenzaKit.Playlist","version":1,"playlist":…}` capped at 1 MiB.
+The `playlistInterchange` flag gates both operations. Import preserves metadata,
+entry order and duplicate media; an optional new UUID permits an intentional copy.
+Existing playlist IDs are never overwritten implicitly. Imports validate registered
+providers but leave media IDs opaque until playback; they never initiate media or
+network access. Malformed/unsupported/oversized input is rejected before storage,
+and each import is one atomic transaction.

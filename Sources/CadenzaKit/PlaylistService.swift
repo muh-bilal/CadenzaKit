@@ -3,14 +3,19 @@ import CadenzaDomain
 
 /// Durable playlist identities and names. Use a document separate from bookmarks.
 public struct PlaylistService: Sendable {
+    public static let maximumInterchangeBytes = 1_048_576
     private let flags: FeatureFlags
     private let store: any DocumentStore
     private let now: @Sendable () -> Date
+    private let registeredProviders: Set<String>
+    private let defaultProvider: String
 
-    init(flags: FeatureFlags, store: any DocumentStore, now: @escaping @Sendable () -> Date) {
+    init(flags: FeatureFlags, store: any DocumentStore, now: @escaping @Sendable () -> Date, registeredProviders: Set<String>, defaultProvider: String) {
         self.flags = flags
         self.store = store
         self.now = now
+        self.registeredProviders = registeredProviders
+        self.defaultProvider = defaultProvider
     }
 
     public func all() async throws -> [Playlist] {
@@ -89,6 +94,56 @@ public struct PlaylistService: Sendable {
             guard let old = entries.firstIndex(where: { $0.id == entryID }) else { throw CadenzaError.playlistEntryNotFound }
             entries.insert(entries.remove(at: old), at: index)
         }
+    }
+
+    /// Interchange version 1 is separate from the internal storage schema.
+    public func exportPlaylist(_ id: UUID) async throws -> Data {
+        try authorizeInterchange()
+        let playlist = try await playlist(id)
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        let data = try encoder.encode(Interchange(playlist: playlist))
+        guard data.count <= Self.maximumInterchangeBytes else { throw CadenzaError.playlistArchiveTooLarge }
+        return data
+    }
+
+    /// IDs remain opaque; import validates provider registration, not media access.
+    @discardableResult
+    public func importPlaylist(_ data: Data, as newID: UUID? = nil) async throws -> Playlist {
+        try authorizeInterchange()
+        guard data.count <= Self.maximumInterchangeBytes else { throw CadenzaError.playlistArchiveTooLarge }
+        let imported: Playlist
+        do {
+            let header = try JSONDecoder().decode(InterchangeHeader.self, from: data)
+            guard header.format == "CadenzaKit.Playlist" else { throw CadenzaError.invalidPlaylistArchive }
+            guard header.version == 1 else { throw CadenzaError.unsupportedPlaylistFormatVersion(header.version) }
+            imported = try JSONDecoder().decode(Interchange.self, from: data).playlist
+        } catch let error as CadenzaError { throw error }
+        catch { throw CadenzaError.invalidPlaylistArchive }
+        let playlist = try Playlist(id: newID ?? imported.id, name: imported.name, updatedAt: imported.updatedAt, entries: imported.entries)
+        for entry in playlist.entries {
+            let provider = entry.provider ?? defaultProvider
+            guard registeredProviders.contains(provider) else { throw CadenzaError.providerNotFound(provider) }
+        }
+        try await store.update { data in
+            var archive = try Self.decode(data)
+            guard !archive.playlists.contains(where: { $0.id == playlist.id }) else { throw CadenzaError.duplicatePlaylist }
+            archive.playlists.append(playlist)
+            return try Self.encode(archive)
+        }
+        return playlist
+    }
+
+    private func authorizeInterchange() throws {
+        try authorize()
+        guard flags.playlistInterchange else { throw CadenzaError.playlistInterchangeDisabled }
+    }
+
+    private struct InterchangeHeader: Decodable { let format: String; let version: Int }
+    private struct Interchange: Codable {
+        var format = "CadenzaKit.Playlist"
+        var version = 1
+        let playlist: Playlist
     }
 
     private func edit(_ id: UUID, mutation: @escaping @Sendable (inout [QueueEntry]) throws -> Void) async throws {

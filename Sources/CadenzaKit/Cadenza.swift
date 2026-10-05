@@ -55,7 +55,8 @@ public struct Cadenza: Sendable {
     }
 
     public func makePlaylists(store: any DocumentStore, now: @escaping @Sendable () -> Date = { Date() }) -> PlaylistService {
-        PlaylistService(flags: configuration.features, store: store, now: now)
+        PlaylistService(flags: configuration.features, store: store, now: now,
+                        registeredProviders: Set(providers.keys), defaultProvider: configuration.defaultProvider)
     }
 
     @MainActor
