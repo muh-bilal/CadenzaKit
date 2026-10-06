@@ -187,3 +187,27 @@ Existing playlist IDs are never overwritten implicitly. Imports validate registe
 providers but leave media IDs opaque until playback; they never initiate media or
 network access. Malformed/unsupported/oversized input is rejected before storage,
 and each import is one atomic transaction.
+
+## Local library indexing
+
+`kit.makeLibrary(root:namespace:store:catalog:metadata:)` creates an actor-isolated
+index. Inject `LocalFileCatalog()` and `AVMetadataReader()` for real local files.
+`scan()` persists one complete snapshot, reports metadata failures per file, reuses
+unchanged size/modification-time fingerprints, and retains missing records. IDs
+combine the namespace and relative path, surviving root relocation; renaming a
+track creates a new identity. Symlinks and hidden files are skipped. The host owns
+sandbox access. Fingerprints are not content hashes, and scans do not lock files
+against external edits; a subsequent scan reconciles changes.
+
+`all()`, `search(_:includeUnavailable:)`, and `resource(_:)` read the saved index.
+Search folds case/diacritics; empty queries return all eligible records. Missing
+and unreadable media never resolve as playable. A `CatalogFileSource` lookup can
+call `library.resource` to connect the index to existing sessions/queues. Metadata
+includes title (filename fallback), artist, album, and duration through AVFoundation;
+codec support is platform-dependent. No filesystem watcher or system music-library
+permission is implied. `libraryIndexing` and `persistence` gate service operations.
+
+Cancelled scans preserve the previous index; overlapping scans reject explicitly.
+Concurrent writers sharing the store detect snapshot conflicts rather than lose
+updates. Use a separate document/key and stable namespace per library. File storage
+on tvOS remains purgeable; bounded preferences are suitable only for small indexes.

@@ -82,6 +82,11 @@ public enum CadenzaError: Error, Equatable, Sendable {
     case playlistArchiveTooLarge
     case invalidPlaylistArchive
     case unsupportedPlaylistFormatVersion(Int)
+    case libraryDisabled
+    case invalidLibraryItem
+    case libraryFailure(String)
+    case libraryNamespaceMismatch
+    case libraryChangedDuringScan
 }
 
 /// Implementations must cooperate with task cancellation and support concurrent calls.
