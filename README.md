@@ -211,3 +211,17 @@ Cancelled scans preserve the previous index; overlapping scans reject explicitly
 Concurrent writers sharing the store detect snapshot conflicts rather than lose
 updates. Use a separate document/key and stable namespace per library. File storage
 on tvOS remains purgeable; bounded preferences are suitable only for small indexes.
+
+## Smart playlists
+
+`kit.makeSmartPlaylists(store:library:)` persists `SmartPlaylist` definitions in a
+separate version-1 document. `save` explicitly upserts by UUID, `all` lists definitions,
+`delete` removes them, and `evaluate` returns a current library snapshot. Results
+exclude unavailable items. Rules contain 1–32 typed predicates: case/diacritic-folded
+title/artist/album substrings or inclusive finite duration ranges, combined with
+`.all` or `.any`. Empty text is rejected. Sort by title, artist, album or duration,
+ascending/descending, with media-ID tie-breaking and an optional positive limit.
+Missing artist/album fields sort as empty strings. Evaluation never mutates a queue.
+The `smartPlaylists`, `playlists`, and `persistence` flags gate the service; library
+access also enforces its own policy. Nested expressions, play-count predicates,
+automatic queue synchronization and cloud rule sharing are not implemented.

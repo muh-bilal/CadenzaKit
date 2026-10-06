@@ -83,6 +83,8 @@ public enum CadenzaError: Error, Equatable, Sendable {
     case invalidPlaylistArchive
     case unsupportedPlaylistFormatVersion(Int)
     case libraryDisabled
+    case smartPlaylistsDisabled
+    case invalidSmartPlaylist
     case invalidLibraryItem
     case libraryFailure(String)
     case libraryNamespaceMismatch

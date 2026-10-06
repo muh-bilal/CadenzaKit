@@ -63,6 +63,10 @@ public struct Cadenza: Sendable {
         LibraryService(flags: configuration.features, root: root, namespace: namespace, store: store, catalog: catalog, reader: metadata)
     }
 
+    public func makeSmartPlaylists(store: any DocumentStore, library: LibraryService) -> SmartPlaylistService {
+        SmartPlaylistService(flags: configuration.features, store: store, library: library)
+    }
+
     @MainActor
     public func makeQueue(backend: any PlaybackBackend, random: any RandomNumberGenerator = SystemRandomNumberGenerator()) -> PlaybackQueue {
         PlaybackQueue(session: makeSession(backend: backend), flags: configuration.features, random: random)
