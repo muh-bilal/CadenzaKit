@@ -225,3 +225,20 @@ Missing artist/album fields sort as empty strings. Evaluation never mutates a qu
 The `smartPlaylists`, `playlists`, and `persistence` flags gate the service; library
 access also enforces its own policy. Nested expressions, play-count predicates,
 automatic queue synchronization and cloud rule sharing are not implemented.
+
+## Optional artwork loading
+
+Select `CadenzaArtwork` and inject `AppleArtworkLoader()` through
+`kit.makeArtwork(loader:limits:)`, using validated `ArtworkLimits`. `load(id)`
+resolves media through the configured source and reads its embedded artwork;
+`loadImage(at:)` reads a caller-selected local image. Both enforce the `artwork`
+flag. Missing embedded artwork returns nil; malformed containers, inaccessible
+files and exceeded limits throw structured errors. The result contains encoded
+bytes and pixel dimensions, without UIKit/AppKit/SwiftUI dependencies.
+
+The Apple loader uses [AVFoundation metadata](https://developer.apple.com/documentation/avfoundation/retrieving-media-metadata)
+and [ImageIO container inspection](https://developer.apple.com/documentation/imageio/cgimagesource).
+Standalone reads are bounded. Embedded metadata is materialized by AVFoundation
+before the returned byte/pixel limits can be checked; no streaming extraction or
+hard framework-allocation ceiling is promised. Container validation does not decode
+every pixel. This loader reads local artwork; other artwork operations use separate services. Hosts retain sandbox access; no images are SDK resources.

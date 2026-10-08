@@ -10,7 +10,8 @@ let package = Package(
         .library(name: "CadenzaTesting", targets: ["CadenzaTesting"]),
         .library(name: "CadenzaLocalSources", targets: ["CadenzaLocalSources"]),
         .library(name: "CadenzaAVPlayback", targets: ["CadenzaAVPlayback"]),
-        .library(name: "CadenzaPersistence", targets: ["CadenzaPersistence"])
+        .library(name: "CadenzaPersistence", targets: ["CadenzaPersistence"]),
+        .library(name: "CadenzaArtwork", targets: ["CadenzaArtwork"])
     ],
     targets: [
         .target(name: "CadenzaDomain"),
@@ -19,6 +20,7 @@ let package = Package(
         .target(name: "CadenzaLocalSources", dependencies: ["CadenzaDomain"], resources: [.copy("PrivacyInfo.xcprivacy")]),
         .target(name: "CadenzaAVPlayback", dependencies: ["CadenzaDomain"]),
         .target(name: "CadenzaPersistence", dependencies: ["CadenzaDomain"], resources: [.copy("PrivacyInfo.xcprivacy")]),
-        .testTarget(name: "CadenzaKitTests", dependencies: ["CadenzaKit", "CadenzaTesting", "CadenzaLocalSources", "CadenzaAVPlayback", "CadenzaPersistence"])
+        .target(name: "CadenzaArtwork", dependencies: ["CadenzaDomain"]),
+        .testTarget(name: "CadenzaKitTests", dependencies: ["CadenzaKit", "CadenzaTesting", "CadenzaLocalSources", "CadenzaAVPlayback", "CadenzaPersistence", "CadenzaArtwork"])
     ]
 )

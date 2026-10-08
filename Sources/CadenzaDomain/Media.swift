@@ -85,6 +85,10 @@ public enum CadenzaError: Error, Equatable, Sendable {
     case libraryDisabled
     case smartPlaylistsDisabled
     case invalidSmartPlaylist
+    case artworkDisabled
+    case invalidArtwork
+    case artworkTooLarge
+    case artworkFailure(String)
     case invalidLibraryItem
     case libraryFailure(String)
     case libraryNamespaceMismatch

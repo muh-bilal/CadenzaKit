@@ -67,6 +67,10 @@ public struct Cadenza: Sendable {
         SmartPlaylistService(flags: configuration.features, store: store, library: library)
     }
 
+    public func makeArtwork(loader: any ArtworkLoader, limits: ArtworkLimits) -> ArtworkService {
+        ArtworkService(kit: self, loader: loader, limits: limits)
+    }
+
     @MainActor
     public func makeQueue(backend: any PlaybackBackend, random: any RandomNumberGenerator = SystemRandomNumberGenerator()) -> PlaybackQueue {
         PlaybackQueue(session: makeSession(backend: backend), flags: configuration.features, random: random)
