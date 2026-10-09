@@ -242,3 +242,19 @@ Standalone reads are bounded. Embedded metadata is materialized by AVFoundation
 before the returned byte/pixel limits can be checked; no streaming extraction or
 hard framework-allocation ceiling is promised. Container validation does not decode
 every pixel. This loader reads local artwork; other artwork operations use separate services. Hosts retain sandbox access; no images are SDK resources.
+
+`kit.makeArtworkThumbnails(processor:maximumCacheBytes:)` accepts the optional
+`ImageIOArtworkProcessor`. `thumbnail(_:maximumDimension:)` decodes/downsamples the
+first image with orientation applied, preserves aspect ratio, and returns PNG data.
+Dimensions must be 1–4096 pixels. The actor's LRU cache uses SHA-256 of source bytes
+plus requested size, so changed content cannot reuse stale thumbnails. It bounds
+encoded payload bytes (default 16 MiB) and entries (256); this is not a hard process
+memory ceiling. Oversized results remain usable but are not cached. Concurrent
+misses may process independently; cache accounting remains correct.
+
+`artworkDownsampling` gates processing; `artworkCaching = false` permits processing
+without retention. `removeAll()` clears cached data and prevents already-running
+requests from repopulating it. Cancelled/failed requests never insert results.
+`cachedBytes`/`cachedCount` expose usage. The host can clear on memory pressure.
+No disk cache, animation playback, or preemptive interruption of ImageIO's synchronous
+decode call is promised; cancellation is checked before and after framework work.

@@ -20,6 +20,8 @@ public struct FeatureFlags: Equatable, Sendable {
     public var libraryIndexing: Bool
     public var smartPlaylists: Bool
     public var artwork: Bool
+    public var artworkDownsampling: Bool
+    public var artworkCaching: Bool
 
     public init(
         sourceResolution: Bool = true,
@@ -35,7 +37,9 @@ public struct FeatureFlags: Equatable, Sendable {
         playlistInterchange: Bool = true,
         libraryIndexing: Bool = true,
         smartPlaylists: Bool = true,
-        artwork: Bool = true
+        artwork: Bool = true,
+        artworkDownsampling: Bool = true,
+        artworkCaching: Bool = true
     ) {
         self.sourceResolution = sourceResolution
         self.playback = playback
@@ -51,6 +55,8 @@ public struct FeatureFlags: Equatable, Sendable {
         self.libraryIndexing = libraryIndexing
         self.smartPlaylists = smartPlaylists
         self.artwork = artwork
+        self.artworkDownsampling = artworkDownsampling
+        self.artworkCaching = artworkCaching
     }
 
     public func isEnabled(_ feature: Feature) -> Bool {

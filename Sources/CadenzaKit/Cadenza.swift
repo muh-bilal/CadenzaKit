@@ -71,6 +71,10 @@ public struct Cadenza: Sendable {
         ArtworkService(kit: self, loader: loader, limits: limits)
     }
 
+    public func makeArtworkThumbnails(processor: any ArtworkProcessor, maximumCacheBytes: Int = 16_777_216) throws -> ArtworkThumbnailService {
+        try ArtworkThumbnailService(flags: configuration.features, processor: processor, maximumCacheBytes: maximumCacheBytes)
+    }
+
     @MainActor
     public func makeQueue(backend: any PlaybackBackend, random: any RandomNumberGenerator = SystemRandomNumberGenerator()) -> PlaybackQueue {
         PlaybackQueue(session: makeSession(backend: backend), flags: configuration.features, random: random)

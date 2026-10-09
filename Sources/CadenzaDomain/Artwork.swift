@@ -32,3 +32,7 @@ public protocol ArtworkLoader: Sendable {
     /// nil means no embedded artwork. Malformed or inaccessible data must throw.
     func load(_ request: ArtworkRequest, limits: ArtworkLimits) async throws -> Artwork?
 }
+
+public protocol ArtworkProcessor: Sendable {
+    func thumbnail(_ artwork: Artwork, maximumDimension: Int) async throws -> Artwork
+}
