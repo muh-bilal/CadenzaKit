@@ -89,6 +89,8 @@ public enum CadenzaError: Error, Equatable, Sendable {
     case invalidArtwork
     case artworkTooLarge
     case artworkFailure(String)
+    case artworkExportDisabled
+    case artworkDestinationExists
     case invalidLibraryItem
     case libraryFailure(String)
     case libraryNamespaceMismatch

@@ -75,6 +75,10 @@ public struct Cadenza: Sendable {
         try ArtworkThumbnailService(flags: configuration.features, processor: processor, maximumCacheBytes: maximumCacheBytes)
     }
 
+    public func makeArtworkExport(exporter: any ArtworkExporter) -> ArtworkExportService {
+        ArtworkExportService(flags: configuration.features, exporter: exporter)
+    }
+
     @MainActor
     public func makeQueue(backend: any PlaybackBackend, random: any RandomNumberGenerator = SystemRandomNumberGenerator()) -> PlaybackQueue {
         PlaybackQueue(session: makeSession(backend: backend), flags: configuration.features, random: random)

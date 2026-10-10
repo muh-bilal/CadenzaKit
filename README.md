@@ -258,3 +258,13 @@ requests from repopulating it. Cancelled/failed requests never insert results.
 `cachedBytes`/`cachedCount` expose usage. The host can clear on memory pressure.
 No disk cache, animation playback, or preemptive interruption of ImageIO's synchronous
 decode call is promised; cancellation is checked before and after framework work.
+
+`kit.makeArtworkExport(exporter: FileArtworkExporter())` exports encoded bytes to
+an explicit local URL. The `artworkExport` and `artwork` flags gate access. The default
+refuses existing destinations, including concurrent writers: it stages in the same
+directory and publishes via a hard link. Volumes that do not support hard links fail
+explicitly. `overwrite: true` requests Foundation's atomic replacement. Existing
+staging-name collisions are preserved. Cancellation before publication cleans up
+staging; cancellation after a completed write does not undo the export. The adapter
+does not promise fsync/power-loss durability. Hosts own sandbox access and choose
+the filename extension matching the encoded bytes; export performs no conversion.

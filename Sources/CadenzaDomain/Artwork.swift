@@ -36,3 +36,7 @@ public protocol ArtworkLoader: Sendable {
 public protocol ArtworkProcessor: Sendable {
     func thumbnail(_ artwork: Artwork, maximumDimension: Int) async throws -> Artwork
 }
+
+public protocol ArtworkExporter: Sendable {
+    func export(_ artwork: Artwork, to destination: URL, overwrite: Bool) async throws
+}
