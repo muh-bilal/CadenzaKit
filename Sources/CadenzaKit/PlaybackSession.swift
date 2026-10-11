@@ -43,6 +43,7 @@ public final class PlaybackSession {
             try check(token)
             let media = try await kit.resolve(id, provider: provider)
             try check(token)
+            if !media.url.isFileURL { try await authorize(.remotePlayback); try check(token) }
             let loadedDuration = try await backend.load(media)
             try check(token)
             guard loadedDuration.isFinite, loadedDuration > 0 else { throw CadenzaError.invalidDuration }
@@ -55,6 +56,7 @@ public final class PlaybackSession {
                 position = resumePosition
             }
             if autoplay {
+                if !media.url.isFileURL { try await authorize(.remotePlayback); try check(token) }
                 try await authorize(.playback)
                 try check(token)
                 try backend.play()
@@ -183,6 +185,7 @@ public final class PlaybackSession {
         busy = true
         defer { if token == generation { busy = false } }
         // Authorization failures preserve the previous usable session state.
+        if resource?.url.isFileURL == false { try await authorize(.remotePlayback) }
         try await authorize(feature)
         for feature in additional { try await authorize(feature) }
         try check(token)

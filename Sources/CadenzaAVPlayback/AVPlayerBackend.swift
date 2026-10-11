@@ -2,21 +2,26 @@ import Foundation
 import AVFoundation
 import CadenzaDomain
 
-/// Local-file AVPlayer backend. Remote URLs are rejected until the remote slice.
+/// Local files by default; finite HTTPS media requires explicit opt-in.
 @MainActor
 public final class AVPlayerBackend: PlaybackBackend {
-    public let supportedFeatures: Set<Feature> = [.playback, .seeking]
+    public let supportedFeatures: Set<Feature>
     private let player = AVPlayer()
     private var generation: UInt64 = 0
     private var duration: Double = 0
     private var reachedEnd = false
     private var endObserver: PlaybackEndObserver?
 
-    public init() {}
+    public init(allowRemote: Bool = false) {
+        supportedFeatures = allowRemote ? [.playback, .seeking, .remotePlayback] : [.playback, .seeking]
+    }
 
     public func load(_ resource: MediaResource) async throws -> Double {
         try Task.checkCancellation()
-        guard resource.url.isFileURL else { throw CadenzaError.unsupportedURL }
+        if !resource.url.isFileURL {
+            guard supportedFeatures.contains(.remotePlayback) else { throw CadenzaError.unsupportedURL }
+            _ = try RemoteMediaURL(resource.url)
+        }
         stop()
         let token = generation
         let asset = AVURLAsset(url: resource.url)

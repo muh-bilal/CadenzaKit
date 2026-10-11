@@ -3,6 +3,7 @@ public enum Feature: String, CaseIterable, Hashable, Sendable {
     case sourceResolution
     case playback
     case seeking
+    case remotePlayback
 }
 
 public struct FeatureFlags: Equatable, Sendable {
@@ -23,6 +24,7 @@ public struct FeatureFlags: Equatable, Sendable {
     public var artworkDownsampling: Bool
     public var artworkCaching: Bool
     public var artworkExport: Bool
+    public var remotePlayback: Bool
 
     public init(
         sourceResolution: Bool = true,
@@ -41,7 +43,8 @@ public struct FeatureFlags: Equatable, Sendable {
         artwork: Bool = true,
         artworkDownsampling: Bool = true,
         artworkCaching: Bool = true,
-        artworkExport: Bool = true
+        artworkExport: Bool = true,
+        remotePlayback: Bool = false
     ) {
         self.sourceResolution = sourceResolution
         self.playback = playback
@@ -60,6 +63,7 @@ public struct FeatureFlags: Equatable, Sendable {
         self.artworkDownsampling = artworkDownsampling
         self.artworkCaching = artworkCaching
         self.artworkExport = artworkExport
+        self.remotePlayback = remotePlayback
     }
 
     public func isEnabled(_ feature: Feature) -> Bool {
@@ -67,6 +71,7 @@ public struct FeatureFlags: Equatable, Sendable {
         case .sourceResolution: sourceResolution
         case .playback: playback
         case .seeking: seeking
+        case .remotePlayback: remotePlayback
         }
     }
 }
@@ -92,9 +97,9 @@ public struct RuntimeCapabilities: Equatable, Sendable {
     public var outputRoute: Set<Feature>
 
     public init(
-        backend: Set<Feature> = [.sourceResolution, .playback, .seeking],
-        platform: Set<Feature> = [.sourceResolution, .playback, .seeking],
-        outputRoute: Set<Feature> = [.sourceResolution, .playback, .seeking]
+        backend: Set<Feature> = [.sourceResolution, .playback, .seeking, .remotePlayback],
+        platform: Set<Feature> = [.sourceResolution, .playback, .seeking, .remotePlayback],
+        outputRoute: Set<Feature> = [.sourceResolution, .playback, .seeking, .remotePlayback]
     ) {
         self.backend = backend
         self.platform = platform

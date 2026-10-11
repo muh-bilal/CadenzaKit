@@ -268,3 +268,21 @@ staging-name collisions are preserved. Cancellation before publication cleans up
 staging; cancellation after a completed write does not undo the export. The adapter
 does not promise fsync/power-loss durability. Hosts own sandbox access and choose
 the filename extension matching the encoded bytes; export performs no conversion.
+
+## Direct HTTPS playback
+
+Select `CadenzaRemoteSources` for `HTTPSCatalogSource`, an explicit ID-to-resource
+catalog. It accepts HTTPS URLs with a host and rejects inline credentials/fragments;
+resolution validates identity without requesting the network. Opt in through
+`FeatureFlags(remotePlayback: true)` and `AVPlayerBackend(allowRemote: true)`.
+Sessions check `.remotePlayback` against source/backend/platform/output policy before
+loading and again on transport commands. Pause/stop remain available after denial.
+TLS/redirect handling is owned by AVFoundation and host transport-security settings;
+no custom trust bypass is installed.
+
+The provider supports finite media playable by AVFoundation. Live/indefinite
+duration streams fail explicitly. Actual seeking depends on asset/server support.
+No provider authentication, custom request headers, remote artwork, automatic retry,
+offline storage or bounded load deadline is claimed yet. A required real HTTPS
+integration streams a small sample; [provenance and license](Documentation/Media.md)
+are recorded separately from SDK resources. Network failure fails validation.
