@@ -50,6 +50,18 @@ public struct Cadenza: Sendable {
         PlaybackSession(kit: self, backend: backend)
     }
 
+    @MainActor
+    public func makeResilientSession(backend: any PlaybackBackend, policy: NetworkRecoveryPolicy, clock: any PlaybackClock = ContinuousPlaybackClock()) throws -> PlaybackSession {
+        guard configuration.features.networkRecovery else { throw CadenzaError.networkRecoveryDisabled }
+        return makeSession(backend: RecoveringPlaybackBackend(backend: backend, policy: policy, clock: clock))
+    }
+
+    @MainActor
+    public func makeResilientQueue(backend: any PlaybackBackend, policy: NetworkRecoveryPolicy, clock: any PlaybackClock = ContinuousPlaybackClock(), random: any RandomNumberGenerator = SystemRandomNumberGenerator()) throws -> PlaybackQueue {
+        let session = try makeResilientSession(backend: backend, policy: policy, clock: clock)
+        return PlaybackQueue(session: session, flags: configuration.features, random: random)
+    }
+
     public func makeBookmarks(store: any DocumentStore, now: @escaping @Sendable () -> Date = { Date() }) -> BookmarkService {
         BookmarkService(flags: configuration.features, store: store, now: now)
     }

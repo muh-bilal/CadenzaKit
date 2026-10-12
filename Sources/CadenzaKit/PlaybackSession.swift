@@ -128,7 +128,7 @@ public final class PlaybackSession {
 
     public func refresh() async throws {
         try Task.checkCancellation()
-        let wasPlaying = state == .playing
+        let wasPlaying = state == .playing || state == .buffering
         try sample()
         if let range = loopRange, wasPlaying, state == .ended || position >= range.end || position < range.start {
             let token = generation
@@ -159,7 +159,9 @@ public final class PlaybackSession {
             guard status.position.isFinite, status.position >= 0 else { throw CadenzaError.invalidPosition }
             position = min(status.position, duration)
             if status.ended { state = .ended }
+            else if status.isBuffering { state = .buffering }
             else if status.isPlaying { state = .playing }
+            else if state == .buffering { state = .paused }
         } catch {
             try fail(error, token: generation)
         }

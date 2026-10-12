@@ -11,6 +11,7 @@ public final class AVPlayerBackend: PlaybackBackend {
     private var duration: Double = 0
     private var reachedEnd = false
     private var endObserver: PlaybackEndObserver?
+    private var loadingAsset: AVURLAsset?
 
     public init(allowRemote: Bool = false) {
         supportedFeatures = allowRemote ? [.playback, .seeking, .remotePlayback] : [.playback, .seeking]
@@ -25,7 +26,12 @@ public final class AVPlayerBackend: PlaybackBackend {
         stop()
         let token = generation
         let asset = AVURLAsset(url: resource.url)
-        let (playable, time) = try await asset.load(.isPlayable, .duration)
+        loadingAsset = asset
+        defer { if token == generation { loadingAsset = nil } }
+        let (playable, time) = try await withTaskCancellationHandler {
+            do { return try await asset.load(.isPlayable, .duration) }
+            catch { try Task.checkCancellation(); throw error }
+        } onCancel: { asset.cancelLoading() }
         try Task.checkCancellation()
         guard token == generation else { throw CancellationError() }
         guard playable else { throw CadenzaError.unsupportedMedia }
@@ -64,6 +70,8 @@ public final class AVPlayerBackend: PlaybackBackend {
 
     public func stop() {
         generation &+= 1
+        loadingAsset?.cancelLoading()
+        loadingAsset = nil
         if let endObserver { NotificationCenter.default.removeObserver(endObserver) }
         endObserver = nil
         reachedEnd = false
@@ -78,7 +86,7 @@ public final class AVPlayerBackend: PlaybackBackend {
         let position = player.currentTime().seconds
         return BackendStatus(position: position.isFinite ? max(0, position) : 0,
                              isPlaying: player.rate != 0,
-                             ended: reachedEnd)
+                             ended: reachedEnd, isBuffering: player.timeControlStatus == .waitingToPlayAtSpecifiedRate)
     }
 }
 

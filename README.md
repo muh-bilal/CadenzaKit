@@ -282,7 +282,28 @@ no custom trust bypass is installed.
 
 The provider supports finite media playable by AVFoundation. Live/indefinite
 duration streams fail explicitly. Actual seeking depends on asset/server support.
-No provider authentication, custom request headers, remote artwork, automatic retry,
-offline storage or bounded load deadline is claimed yet. A required real HTTPS
+The source adds no provider authentication, custom request headers, remote artwork
+or offline storage. Normal session factories have no retry/deadline policy; resilient
+factories below provide explicit opt-in recovery. A required real HTTPS
 integration streams a small sample; [provenance and license](Documentation/Media.md)
 are recorded separately from SDK resources. Network failure fails validation.
+
+## Bounded network preparation and buffering
+
+Enable `networkRecovery` and call `makeResilientSession` or `makeResilientQueue`
+with a validated `NetworkRecoveryPolicy` and optional injected `PlaybackClock`.
+For remote loads, each attempt has a timeout; only timeouts, offline and selected
+connection failures retry. Attempts are bounded to 1–5, deadlines to five minutes,
+and retry delay to one minute. Permanent errors (including TLS trust failures) are
+not retried. Exhaustion reports attempts and a structured network reason. Local
+loads use the normal backend path. Recovery is opt-in; normal factories retain
+their existing behavior.
+
+AVPlayer preparation now cancels its AVURLAsset on task cancellation or stop.
+The timeout races load against the injected clock and cancels the losing task.
+Custom backends must cooperate with cancellation; Swift cannot forcibly terminate
+arbitrary injected code. Stop/replacement invalidates retries and stale completions.
+`BackendStatus.isBuffering` maps AVPlayer's waiting state to `.buffering` on refresh;
+ready-to-play and paused transitions remain explicit. This policy recovers load
+preparation only: it does not automatically restart an interrupted playing item,
+change networks, or promise seamless recovery from midstream outages.

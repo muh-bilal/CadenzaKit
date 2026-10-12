@@ -2,11 +2,13 @@ public struct BackendStatus: Equatable, Sendable {
     public let position: Double
     public let isPlaying: Bool
     public let ended: Bool
+    public let isBuffering: Bool
 
-    public init(position: Double, isPlaying: Bool, ended: Bool) {
+    public init(position: Double, isPlaying: Bool, ended: Bool, isBuffering: Bool = false) {
         self.position = position
         self.isPlaying = isPlaying
         self.ended = ended
+        self.isBuffering = isBuffering
     }
 }
 
@@ -29,6 +31,7 @@ public enum PlaybackState: Equatable, Sendable {
     case loading(MediaID)
     case ready
     case playing
+    case buffering
     case paused
     case ended
     case failed(CadenzaError)

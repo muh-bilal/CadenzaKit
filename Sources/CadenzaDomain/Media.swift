@@ -91,6 +91,10 @@ public enum CadenzaError: Error, Equatable, Sendable {
     case artworkFailure(String)
     case artworkExportDisabled
     case artworkDestinationExists
+    case invalidRecoveryPolicy
+    case networkRecoveryDisabled
+    case playbackTimedOut
+    case networkRecoveryExhausted(attempts: Int, reason: NetworkFailure)
     case invalidLibraryItem
     case libraryFailure(String)
     case libraryNamespaceMismatch
