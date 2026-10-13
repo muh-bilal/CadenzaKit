@@ -95,6 +95,12 @@ public enum CadenzaError: Error, Equatable, Sendable {
     case networkRecoveryDisabled
     case playbackTimedOut
     case networkRecoveryExhausted(attempts: Int, reason: NetworkFailure)
+    case downloadsDisabled
+    case invalidDownload
+    case duplicateDownload
+    case downloadHTTPStatus(Int)
+    case downloadTooLarge
+    case downloadFailure(String)
     case invalidLibraryItem
     case libraryFailure(String)
     case libraryNamespaceMismatch

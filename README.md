@@ -307,3 +307,31 @@ arbitrary injected code. Stop/replacement invalidates retries and stale completi
 ready-to-play and paused transitions remain explicit. This policy recovers load
 preparation only: it does not automatically restart an interrupted playing item,
 change networks, or promise seamless recovery from midstream outages.
+
+## Progressive offline audio downloads
+
+Select `CadenzaDownloads` for `URLSessionAudioTransfer`, and inject it with
+`FileOfflineAudioStore` and `AVMetadataReader` through `kit.makeDownloads`.
+Enable `downloads` at facade initialization and `allowsDownloads` on the HTTPS
+catalog only for media the host is permitted to store. Download capability is checked
+against source/runtime policy before transfer. `download(_:provider:as:)` uses a
+caller-selected offline ID; duplicate IDs reject. `all()` lists persisted records,
+and `resource(_:)` resolves local files for `CatalogFileSource`/normal playback.
+
+Transfers require HTTP 200, reject HTTPS-to-HTTP redirects, enforce declared and
+actual byte counts, and validate the complete audio with AVFoundation before
+publishing it. The initial implementation buffers each bounded transfer in memory:
+16 MiB default, configurable up to 64 MiB. Larger streaming-to-disk/background or
+resumable downloads and HLS/DRM persistence are not implemented. URLs must have a
+supported progressive-audio extension. URLSession request/resource timeouts are
+30/120 seconds; failed/oversized requests are cancelled. No automatic download retry
+is implied by playback recovery policy.
+
+Use a dedicated store directory and one actor per directory. Imports stage audio,
+validate it, publish the file, then atomically update the version-1 catalog. Failed
+validation/index writes and pre-commit cancellation clean up newly created files.
+Overlapping imports into one store reject explicitly. File names derive from IDs
+with SHA-256, so IDs cannot traverse directories. Missing/purged files fail resolution;
+catalog metadata is retained. Process termination between file publication and index
+commit can leave an orphan for storage reconciliation. No fsync guarantee is made.
+tvOS storage is purgeable and does not guarantee permanent offline availability.

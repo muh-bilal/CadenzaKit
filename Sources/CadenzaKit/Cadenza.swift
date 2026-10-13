@@ -91,6 +91,10 @@ public struct Cadenza: Sendable {
         ArtworkExportService(flags: configuration.features, exporter: exporter)
     }
 
+    public func makeDownloads(transfer: any AudioTransfer, store: any OfflineAudioStore, metadata: any MetadataReader, maximumBytes: Int = 16_777_216, now: @escaping @Sendable () -> Date = { Date() }) throws -> AudioDownloadService {
+        try AudioDownloadService(kit: self, transfer: transfer, store: store, metadata: metadata, maximumBytes: maximumBytes, now: now)
+    }
+
     @MainActor
     public func makeQueue(backend: any PlaybackBackend, random: any RandomNumberGenerator = SystemRandomNumberGenerator()) -> PlaybackQueue {
         PlaybackQueue(session: makeSession(backend: backend), flags: configuration.features, random: random)
