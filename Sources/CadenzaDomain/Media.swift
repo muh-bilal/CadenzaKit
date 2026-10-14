@@ -101,6 +101,7 @@ public enum CadenzaError: Error, Equatable, Sendable {
     case downloadHTTPStatus(Int)
     case downloadTooLarge
     case downloadFailure(String)
+    case storageManagementDisabled
     case invalidLibraryItem
     case libraryFailure(String)
     case libraryNamespaceMismatch

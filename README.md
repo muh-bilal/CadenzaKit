@@ -335,3 +335,28 @@ with SHA-256, so IDs cannot traverse directories. Missing/purged files fail reso
 catalog metadata is retained. Process termination between file publication and index
 commit can leave an orphan for storage reconciliation. No fsync guarantee is made.
 tvOS storage is purgeable and does not guarantee permanent offline availability.
+
+## Offline storage management
+
+`FileOfflineAudioStore(maximumStoredBytes:)` enforces a catalog-accounted byte quota
+(default 1 GiB) before staging a new import. This quota does not count unrelated
+files or crash orphans as active downloads. `kit.makeDownloadStorage(store:)` requires
+`storageManagement`, `downloads`, and `persistence`. `usage()` reports catalog bytes,
+actual available audio bytes, orphan bytes and missing IDs separately.
+
+`remove(_:)` commits catalog removal before deleting the audio; any retained file
+is reported explicitly. `trim(to:protecting:)` evicts oldest-created records first,
+breaking ties by ID, and returns remaining catalog bytes. Protected IDs can prevent
+reaching the requested target; hosts should protect active playback themselves.
+`reconcile()` drops missing catalog records and removes recognized unindexed audio
+or staging files. It preserves unknown names, directories and symlinks, including
+an indexed audio path externally replaced by a directory. Use a dedicated directory:
+recognized SHA-256-style audio filenames are treated as SDK-owned.
+
+Mutations reject during an active import. A failed catalog commit preserves audio;
+failed file cleanup leaves a reported orphan for a later reconciliation. Cancellation
+is checked before the synchronous commit boundary; completed mutations are not
+undone afterward. Optional `commitIndex`/`removeFile` closures support coordinated I/O
+and deterministic failure testing; custom commits must preserve atomic replacement.
+The host owns cleanup cadence and disk-pressure decisions. No cross-process writer,
+automatic OS eviction callback or physical power-loss durability is claimed.

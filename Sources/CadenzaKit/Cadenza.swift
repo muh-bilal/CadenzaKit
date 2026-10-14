@@ -95,6 +95,10 @@ public struct Cadenza: Sendable {
         try AudioDownloadService(kit: self, transfer: transfer, store: store, metadata: metadata, maximumBytes: maximumBytes, now: now)
     }
 
+    public func makeDownloadStorage(store: any ManagedOfflineAudioStore) -> DownloadStorageService {
+        DownloadStorageService(flags: configuration.features, store: store)
+    }
+
     @MainActor
     public func makeQueue(backend: any PlaybackBackend, random: any RandomNumberGenerator = SystemRandomNumberGenerator()) -> PlaybackQueue {
         PlaybackQueue(session: makeSession(backend: backend), flags: configuration.features, random: random)

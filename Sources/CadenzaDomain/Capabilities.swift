@@ -28,6 +28,7 @@ public struct FeatureFlags: Equatable, Sendable {
     public var remotePlayback: Bool
     public var networkRecovery: Bool
     public var downloads: Bool
+    public var storageManagement: Bool
 
     public init(
         sourceResolution: Bool = true,
@@ -49,7 +50,8 @@ public struct FeatureFlags: Equatable, Sendable {
         artworkExport: Bool = true,
         remotePlayback: Bool = false,
         networkRecovery: Bool = false,
-        downloads: Bool = false
+        downloads: Bool = false,
+        storageManagement: Bool = false
     ) {
         self.sourceResolution = sourceResolution
         self.playback = playback
@@ -71,6 +73,7 @@ public struct FeatureFlags: Equatable, Sendable {
         self.remotePlayback = remotePlayback
         self.networkRecovery = networkRecovery
         self.downloads = downloads
+        self.storageManagement = storageManagement
     }
 
     public func isEnabled(_ feature: Feature) -> Bool {
