@@ -13,7 +13,8 @@ let package = Package(
         .library(name: "CadenzaPersistence", targets: ["CadenzaPersistence"]),
         .library(name: "CadenzaArtwork", targets: ["CadenzaArtwork"]),
         .library(name: "CadenzaRemoteSources", targets: ["CadenzaRemoteSources"]),
-        .library(name: "CadenzaDownloads", targets: ["CadenzaDownloads"])
+        .library(name: "CadenzaDownloads", targets: ["CadenzaDownloads"]),
+        .library(name: "CadenzaAudioEngine", targets: ["CadenzaAudioEngine"])
     ],
     targets: [
         .target(name: "CadenzaDomain"),
@@ -25,6 +26,7 @@ let package = Package(
         .target(name: "CadenzaArtwork", dependencies: ["CadenzaDomain"]),
         .target(name: "CadenzaRemoteSources", dependencies: ["CadenzaDomain"]),
         .target(name: "CadenzaDownloads", dependencies: ["CadenzaDomain"]),
-        .testTarget(name: "CadenzaKitTests", dependencies: ["CadenzaKit", "CadenzaTesting", "CadenzaLocalSources", "CadenzaAVPlayback", "CadenzaPersistence", "CadenzaArtwork", "CadenzaRemoteSources", "CadenzaDownloads"])
+        .target(name: "CadenzaAudioEngine", dependencies: ["CadenzaDomain"]),
+        .testTarget(name: "CadenzaKitTests", dependencies: ["CadenzaKit", "CadenzaTesting", "CadenzaLocalSources", "CadenzaAVPlayback", "CadenzaPersistence", "CadenzaArtwork", "CadenzaRemoteSources", "CadenzaDownloads", "CadenzaAudioEngine"])
     ]
 )

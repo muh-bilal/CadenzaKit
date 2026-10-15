@@ -360,3 +360,25 @@ undone afterward. Optional `commitIndex`/`removeFile` closures support coordinat
 and deterministic failure testing; custom commits must preserve atomic replacement.
 The host owns cleanup cadence and disk-pressure decisions. No cross-process writer,
 automatic OS eviction callback or physical power-loss durability is claimed.
+
+## Decoded local audio engine
+
+Select `CadenzaAudioEngine` and inject `AVAudioEngineBackend()` into existing session
+or queue factories. It uses AVAudioFile/AVAudioPlayerNode for finite local audio;
+HTTPS and unsupported assets reject explicitly. Play, pause, frame-based seeking,
+EOF and stop share the existing facade policy/state machine. Files exceeding
+`UInt32.max` decoded frames are rejected because one scheduled segment is bounded
+by AVAudioFrameCount. Codec/container support is whatever AVAudioFile can decode
+on the current platform; no universal codec or gapless guarantee is implied.
+Device-output EOF uses the native played-back completion callback; generation
+tokens prevent old seek/stop callbacks from ending a replacement segment.
+
+`AVAudioEngineBackend(output: .manual)` drives the same graph without hardware I/O.
+After play, `render(frames:)` accepts 1–4096 frames and returns the native render
+status plus PCM buffer; callers handle partial/retry statuses and drive progress.
+This supports deterministic DSP validation and host offline processing. Device
+output is the default. Tests validate actual PCM and real-time timeline/EOF on the
+installed OS/simulators, not physical speaker audibility or background routes.
+Local file preparation and manual render calls are synchronous framework work;
+cancellation is cooperative at operation boundaries. Output mode is backend
+configuration; facade playback/seeking flags still gate session/queue operations.
