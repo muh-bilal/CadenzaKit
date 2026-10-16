@@ -103,6 +103,12 @@ public enum CadenzaError: Error, Equatable, Sendable {
     case downloadFailure(String)
     case storageManagementDisabled
     case invalidRenderRequest
+    case invalidEqualizerSettings
+    case invalidEqualizerPreset
+    case equalizerDisabled
+    case equalizerPresetNotFound
+    case equalizerFailure(String)
+    case equalizerFrequencyUnsupported(frequency: Float, sampleRate: Double)
     case invalidLibraryItem
     case libraryFailure(String)
     case libraryNamespaceMismatch

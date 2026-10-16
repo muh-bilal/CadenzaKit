@@ -382,3 +382,26 @@ installed OS/simulators, not physical speaker audibility or background routes.
 Local file preparation and manual render calls are synchronous framework work;
 cancellation is cooperative at operation boundaries. Output mode is backend
 configuration; facade playback/seeking flags still gate session/queue operations.
+
+## Equalizer and presets
+
+Enable `FeatureFlags(equalizer: true)` and use
+`kit.makeEqualizer(backend: engineBackend, store: presetStore)`. `apply(_:provider:)`
+checks source, actual backend, platform and output-route capabilities. Only the
+decoded local AVAudioEngine backend implements DSP; AVPlayer and the HTTPS source
+reject EQ. Runtime snapshots express host policy, not physical route verification.
+
+`EqualizerSettings` supports up to 32 distinct parametric bands, 20–20,000 Hz,
+−24…+24 dB per-band gain and preamp, and 0.05–5 octave bandwidth. Active frequencies
+must be below the loaded file's Nyquist frequency. Loading a lower-rate file with
+incompatible active settings fails explicitly. `bypass()` preserves settings and
+remains available after policy revocation. Applying bypassed settings performs no
+DSP; the backend revalidates when enabling them. No clipping prevention, loudness
+normalization or processing of arbitrary system/DRM/HLS audio is provided.
+
+`savePreset`, `presets`, `deletePreset` and `applyPreset` persist a versioned document
+through the injected store. Preset IDs support explicit upsert; duplicate display
+names are allowed, and listing sorts by name then ID. Use a dedicated document
+store, with bounded preferences storage for durable small tvOS presets. Preset
+operations additionally require `persistence`; direct settings do not. Native EQ
+tests measure actual PCM gain and bypass, not just configuration values.

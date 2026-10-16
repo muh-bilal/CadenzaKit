@@ -4,18 +4,20 @@ import CadenzaDomain
 
 /// Decoded local audio. Manual output uses the same graph without device I/O.
 @MainActor
-public final class AVAudioEngineBackend: PlaybackBackend {
+public final class AVAudioEngineBackend: EqualizerBackend {
     public enum Output: Sendable { case device, manual }
     public struct RenderedAudio {
         public let status: AVAudioEngineManualRenderingStatus
         public let buffer: AVAudioPCMBuffer
     }
 
-    public let supportedFeatures: Set<Feature> = [.playback, .seeking]
+    public let supportedFeatures: Set<Feature> = [.playback, .seeking, .equalizer]
+    public private(set) var equalizerSettings = EqualizerSettings()
     public let output: Output
     public static let maximumRenderFrames: AVAudioFrameCount = 4096
     private let engine = AVAudioEngine()
     private let player = AVAudioPlayerNode()
+    private let equalizer = AVAudioUnitEQ(numberOfBands: 32)
     private var file: AVAudioFile?
     private var startFrame: AVAudioFramePosition = 0
     private var generation: UInt64 = 0
@@ -24,6 +26,8 @@ public final class AVAudioEngineBackend: PlaybackBackend {
     public init(output: Output = .device) {
         self.output = output
         engine.attach(player)
+        engine.attach(equalizer)
+        equalizer.bypass = true
     }
 
     public func load(_ resource: MediaResource) async throws -> Double {
@@ -33,8 +37,11 @@ public final class AVAudioEngineBackend: PlaybackBackend {
         let file = try AVAudioFile(forReading: resource.url)
         guard file.length > 0, file.processingFormat.sampleRate.isFinite, file.processingFormat.sampleRate > 0 else { throw CadenzaError.invalidDuration }
         guard file.length <= AVAudioFramePosition(UInt32.max) else { throw CadenzaError.unsupportedMedia }
+        try validate(equalizerSettings, sampleRate: file.processingFormat.sampleRate)
         engine.disconnectNodeOutput(player)
-        engine.connect(player, to: engine.mainMixerNode, format: file.processingFormat)
+        engine.disconnectNodeOutput(equalizer)
+        engine.connect(player, to: equalizer, format: file.processingFormat)
+        engine.connect(equalizer, to: engine.mainMixerNode, format: file.processingFormat)
         if output == .manual {
             engine.disableManualRenderingMode()
             try engine.enableManualRenderingMode(.offline, format: file.processingFormat, maximumFrameCount: Self.maximumRenderFrames)
@@ -52,6 +59,33 @@ public final class AVAudioEngineBackend: PlaybackBackend {
     }
 
     public func pause() { player.pause() }
+
+    public func applyEqualizer(_ settings: EqualizerSettings) throws {
+        try Task.checkCancellation()
+        if let file { try validate(settings, sampleRate: file.processingFormat.sampleRate) }
+        if settings.isBypassed {
+            equalizer.bypass = true
+        } else {
+            for (index, band) in equalizer.bands.enumerated() {
+                guard index < settings.bands.count else { band.bypass = true; continue }
+                let value = settings.bands[index]
+                band.filterType = .parametric
+                band.frequency = value.frequency
+                band.gain = value.gain
+                band.bandwidth = value.bandwidth
+                band.bypass = false
+            }
+            equalizer.globalGain = settings.preamp
+            equalizer.bypass = false
+        }
+        equalizerSettings = settings
+    }
+
+    private func validate(_ settings: EqualizerSettings, sampleRate: Double) throws {
+        if !settings.isBypassed, let band = settings.bands.first(where: { Double($0.frequency) >= sampleRate / 2 }) {
+            throw CadenzaError.equalizerFrequencyUnsupported(frequency: band.frequency, sampleRate: sampleRate)
+        }
+    }
 
     public func seek(to position: Double) async throws {
         try Task.checkCancellation()

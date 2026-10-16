@@ -99,6 +99,10 @@ public struct Cadenza: Sendable {
         DownloadStorageService(flags: configuration.features, store: store)
     }
 
+    public func makeEqualizer(backend: any PlaybackBackend, store: any DocumentStore) -> EqualizerService {
+        EqualizerService(kit: self, backend: backend, store: store)
+    }
+
     @MainActor
     public func makeQueue(backend: any PlaybackBackend, random: any RandomNumberGenerator = SystemRandomNumberGenerator()) -> PlaybackQueue {
         PlaybackQueue(session: makeSession(backend: backend), flags: configuration.features, random: random)
