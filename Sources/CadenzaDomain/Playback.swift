@@ -57,3 +57,16 @@ public struct PlaybackSnapshot: Equatable, Sendable {
 public protocol SystemPlaybackController: AnyObject, Sendable {
     func prepareForPlayback() throws
 }
+
+public enum SystemPlaybackCommand: Equatable, Sendable {
+    case play, pause, toggle, next, previous
+    case seek(Double)
+}
+
+/// Platform output only. Commands return to the service layer for authorization.
+@MainActor
+public protocol NowPlayingController: AnyObject, Sendable {
+    func connect(_ handler: @escaping @MainActor @Sendable (SystemPlaybackCommand) async -> Void)
+    func update(_ snapshot: PlaybackSnapshot, canSeek: Bool, force: Bool)
+    func clear()
+}

@@ -27,11 +27,15 @@ public struct MediaResource: Equatable, Sendable {
     public let id: MediaID
     public let url: URL
     public let title: String
+    public let artist: String?
+    public let album: String?
 
-    public init(id: MediaID, url: URL, title: String) {
+    public init(id: MediaID, url: URL, title: String, artist: String? = nil, album: String? = nil) {
         self.id = id
         self.url = url
         self.title = title
+        self.artist = artist
+        self.album = album
     }
 }
 

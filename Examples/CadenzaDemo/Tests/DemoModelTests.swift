@@ -78,8 +78,8 @@ struct DemoTests {
         backend.position = 24; await model.refresh()
         #expect(model.queue.snapshot.resource?.id == tracks[1].id)
         backend.failure = CadenzaError.unsupportedMedia
-        await model.refresh(); #expect(model.message.contains("Playback stopped"))
-        await model.refresh(); #expect(model.message.contains("Playback stopped"))
+        await model.refresh(); #expect(model.message.contains("Playback error"))
+        await model.refresh(); #expect(model.message.contains("Playback error"))
         backend.failure = CancellationError()
         await model.perform(.select(0)); #expect(model.message == "Operation cancelled.")
         await store.fail(); await model.restore(); #expect(model.message.contains("Could not read bookmarks"))

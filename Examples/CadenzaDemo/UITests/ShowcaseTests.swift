@@ -2,6 +2,25 @@ import XCTest
 
 final class ShowcaseTests: XCTestCase {
     #if os(iOS)
+    // Device-only acceptance check: the iOS 26.4 simulator does not expose
+    // the native media card. This check remains outstanding on real hardware.
+    #if !targetEnvironment(simulator)
+    @MainActor func testSystemNowPlayingControls() {
+        let app = application(); app.launch()
+        activate(app.buttons["playPause"])
+        waitLabel("Pause", on: app.buttons["playPause"])
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.05, dy: 0.01))
+            .press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.05, dy: 0.7)))
+        XCTAssertTrue(springboard.staticTexts["After the light"].waitForExistence(timeout: 8))
+        let pause = springboard.buttons["Pause"]
+        XCTAssertTrue(pause.waitForExistence(timeout: 5)); pause.tap()
+        app.activate()
+        waitLabel("Play", on: app.buttons["playPause"])
+        app.terminate()
+    }
+    #endif
+
     @MainActor func testSeekingKeepsTransportStable() {
         let app = application(); app.launch()
         activate(app.buttons["playPause"])
@@ -315,6 +334,23 @@ final class ShowcaseTests: XCTestCase {
         app.terminate()
     }
     #if os(macOS)
+    @MainActor func testNativeSystemNowPlayingControls() {
+        let app = application(); app.launch()
+        activate(app.buttons["playPause"])
+        waitLabel("Pause", on: app.buttons["playPause"])
+        let center = XCUIApplication(bundleIdentifier: "com.apple.controlcenter")
+        center.statusItems["com.apple.menuextra.now-playing"].click()
+        let title = center.staticTexts.matching(NSPredicate(format: "value BEGINSWITH %@", "After the light")).firstMatch
+        XCTAssertTrue(title.waitForExistence(timeout: 8))
+        guard let group = center.groups.containing(NSPredicate(format: "value BEGINSWITH %@", "After the light")).allElementsBoundByIndex.last else {
+            XCTFail("Missing demo Now Playing group"); return
+        }
+        group.buttons["pause"].click()
+        app.activate()
+        waitLabel("Play", on: app.buttons["playPause"])
+        app.terminate()
+    }
+
     @MainActor func testMinimizedPlaybackRespectsFeatureFlag() {
         for enabled in [true, false] {
             let app = application()

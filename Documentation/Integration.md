@@ -83,6 +83,11 @@ try await player.play(MediaID("track-42"))
 Retain the player at app scope. `pause`, `resume`, `seek`, `next`, `previous`, and
 `stop` delegate to the existing services; async command failures are thrown.
 Automatic refresh failures are exposed through `failure` and stop playback.
+System-command failures also populate `failure`, preserving the service-defined
+state (for example, a denied seek does not stop playback).
+If a backend transport operation fails, subsequent progress ticks preserve the
+original error and failed state. Reload media to recover; successful loading or
+an explicit stop clears the reported failure.
 `onChange` runs on MainActor; avoid capturing the player strongly in its callback.
 `queue` exposes advanced operations; `services` creates bookmarks, playlists,
 equalizer and other services. Inject a backend, system controller, clock, and
@@ -170,11 +175,45 @@ other audio clients may share it; the host coordinates those clients.
 
 Background audio is not a guarantee against force-quit, OS termination, media
 unavailability, or audio interruptions. The service reflects a stopped native
-backend as paused and does not implement automatic interruption recovery. Now
-Playing metadata, lock-screen/Control Center transport commands, AirPlay route
-selection, and Bluetooth route management are separate, unimplemented integrations.
+backend as paused and does not implement automatic interruption recovery. AirPlay route selection and Bluetooth route management are separate, unimplemented
+integrations. The player facade supplies Now Playing integration as described below.
 Simulator/native-Mac checks do not establish physical-device lock-screen or route
 behavior. Validate those with your app's real media and target hardware.
+
+## System Now Playing and remote controls
+
+`CadenzaPlayer` automatically supplies `AppleNowPlayingController` when
+`systemPlayback` is enabled. `MediaResource` accepts optional `artist` and `album`
+strings. The controller publishes title, artist, album, duration, elapsed time and
+playback rate to MediaPlayer. It sends updates on transitions and seeks; the OS
+extrapolates time between updates. macOS playback state is explicitly synchronized.
+
+System play/pause, toggle, seek, next and previous commands return to the facade
+and existing services, including capability authorization and cancellation.
+Callbacks acknowledge acceptance for asynchronous execution; actual errors are
+reported through `failure`/`onChange`. Pause remains available when playback
+permission is revoked. Seeking controls reflect the configured flag and backend;
+the service additionally checks source and runtime policy when a command arrives.
+
+With `systemPlayback: false`, no Now Playing controller is connected and no
+metadata or handlers are installed. Stopping or releasing an owning player clears
+its metadata and unregisters its handlers. The most recently explicitly controlled
+player owns the process-wide Now Playing state; clearing an older player cannot
+clear the newer player's metadata. Stale callbacks are ignored after cleanup.
+The host should ordinarily retain one player for its app-wide listening session.
+
+Inject `NowPlayingController` for a custom system integration. Lower-level clients
+can use `AppleNowPlayingController` explicitly, connect their own service handler,
+and publish snapshots; they must enforce their feature policy themselves. Artwork,
+custom playback rates, remote shuffle/repeat controls, automatic interruption
+resume, and route selection are not included in this capability.
+
+Validation boundary: native macOS metadata and system Pause delivery are tested.
+iOS/iPadOS simulator integration tests exercise MediaPlayer metadata, command
+translation, service policy, and background progress. The native iOS media-card
+visual/button test is device-only and remains unverified on hardware; iOS 26.4
+Simulator does not expose that card in the tested environment. This is not a
+claim that physical lock-screen behavior has passed validation.
 
 ## Queue and history
 

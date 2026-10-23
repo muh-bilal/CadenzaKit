@@ -32,7 +32,7 @@ public final class DemoModel {
         for track in tracks { try queue.insert(.init(id: UUID(), mediaID: track.id), at: queue.entries.count) }
         player.onChange = { [weak self] in
             guard let self else { return }
-            if let failure = self.player.failure { self.message = "Playback stopped: \(failure)" }
+            if let failure = self.player.failure { self.message = "Playback error: \(failure)" }
             self.didChange?()
         }
     }
@@ -99,7 +99,7 @@ public enum DemoAudio {
             }
             let file = try AVAudioFile(forWriting: url, settings: format.settings)
             try file.write(from: buffer)
-            return MediaResource(id: try MediaID("demo-\(track)"), url: url, title: title)
+            return MediaResource(id: try MediaID("demo-\(track)"), url: url, title: title, artist: "CadenzaKit", album: "Original demo audio")
         }
     }
 }

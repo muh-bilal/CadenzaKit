@@ -39,9 +39,10 @@ returning to the app does not automatically resume. UI tests exercise both setti
 using the `CADENZA_SYSTEM_PLAYBACK=0/1` launch environment.
 
 Background audio does not mean execution after force-quit, nor does it prevent
-system interruptions. Now Playing metadata and system remote transport controls
-are not implemented. Physical lock-screen, Bluetooth/AirPlay and interruption
-behavior still require device validation.
+system interruptions. The facade publishes track/artist/album metadata and routes
+system play/pause, seeking, next and previous commands through SDK services.
+Physical lock-screen, Bluetooth/AirPlay and interruption behavior still require
+device validation.
 
 Controls use SF Symbols, accessible labels, system fonts, light/dark appearance,
 and English/German localization. Track titles are original media metadata; SDK
