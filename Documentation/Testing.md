@@ -15,7 +15,7 @@ runs the demo model tests, including real playback and bookmark persistence.
 Coverage and test success are separate gates. Real HTTPS and Apple audio-adapter
 tests are required; unavailable network/audio infrastructure fails the job.
 
-**Player UI validation** runs when demo, SwiftUI, presentation, player facade, system playback,
+**Player UI validation** runs when demo, SwiftUI, presentation, player facade, CarPlay, system playback,
 playback session/queue, UI-test, package, or UI-workflow inputs change. Documentation-only and unrelated service changes
 do not trigger it. Run it manually for broader integration checks after backend
 changes. Version tags also run the UI matrix. Each platform runs its full UI
@@ -58,6 +58,8 @@ to overwrite evidence. Results stay in ignored `.build/validation/` directories.
 Pass `macOS`, `iPhone`, `iPad`, or `tvOS` as the second argument to validate one
 platform. Mac validation also runs SwiftPM coverage checks. The report inventories
 all files under `Sources/`; presentation and adapters are not excluded.
+Native CarPlay adapter coverage is additionally checked on every platform, including
+the iOS-only template handlers on iPhone and iPad. Both coverage gates require 100%.
 
 For a changed demo capability, select its targeted UI test:
 
@@ -74,5 +76,30 @@ Use `CadenzamacOS` / `platform=macOS` for native Mac tests and `CadenzatvOS` /
 and XCTest UI Automation permission. Do not run competing UI suites in the same
 session. Simulator checks cannot establish physical audio routes, VoiceOver
 quality, or real remote hardware behavior.
+
+## System playback and CarPlay acceptance
+
+SDK tests cover opt-in flags, runtime revocation, metadata, commands, cancellation,
+catalog failures and duplicate queue occurrences. The demo's targeted background
+test exercises enabled and disabled playback behavior; native Mac tests exercise
+system media controls. These checks complement real Apple backend tests.
+
+`testSystemNowPlayingControls` is compiled for physical iOS devices only. Physical
+lock-screen metadata and system-button validation remains outstanding. A simulator
+without a functioning system media-controls surface cannot establish that behavior;
+do not count the device-only test as a simulator pass. Device testing requires an
+authorized, provisioned device and is separate from simulator CI.
+
+For CarPlay simulator acceptance, run the iOS demo and open Simulator's
+**I/O → External Displays → CarPlay**. Open CadenzaDemo, select a catalog track,
+verify native Now Playing metadata, pause/resume and next, and verify that the
+phone and CarPlay share the same playback state. Background the phone and verify
+progress; disconnect CarPlay and verify established playback continues. Launch
+with `CADENZA_SYSTEM_PLAYBACK=0` to check the unavailable state. This manual check
+does not certify physical head-unit behavior, audio routing or interruptions.
+Physical CarPlay requires Apple's approved audio entitlement and matching signing
+profile; see the [example setup](../Examples/CadenzaDemo/README.md#carplay).
+
+Repository maintenance instructions are in [AGENTS.md](../AGENTS.md).
 
 Workflow trigger and filter behavior follows [GitHub's workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax).
