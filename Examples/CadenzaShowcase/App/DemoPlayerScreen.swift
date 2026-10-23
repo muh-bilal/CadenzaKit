@@ -57,13 +57,11 @@ struct DemoPlayerScreen: View {
         actions.controls[.more] = { panel = .options }
         actions.controls[.queue] = { panel = .queue }
         actions.controls[.equalizer] = { panel = .sound }
-        if !player.busy {
-            actions.controls[.playPause] = { player.send(.playPause) }
-            actions.controls[.previous] = { player.send(.previous) }
-            actions.controls[.next] = { player.send(.next) }
-            actions.controls[.shuffle] = { player.send(.shuffle) }
-            actions.controls[.repeatMode] = { player.send(.repeatMode) }
-        }
+        actions.controls[.playPause] = { player.send(.playPause) }
+        actions.controls[.previous] = { player.send(.previous) }
+        actions.controls[.next] = { player.send(.next) }
+        actions.controls[.shuffle] = { player.send(.shuffle) }
+        actions.controls[.repeatMode] = { player.send(.repeatMode) }
         let strings = PlayerStrings(resolve: { text in
             if customText, text == .play { return demoText("Start listening") }
             if customText, text == .pause { return demoText("Take a break") }

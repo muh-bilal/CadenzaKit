@@ -1,6 +1,27 @@
 import XCTest
 
 final class ShowcaseTests: XCTestCase {
+    #if os(iOS)
+    @MainActor func testSeekingKeepsTransportStable() {
+        let app = application(); app.launch()
+        activate(app.buttons["playPause"])
+        let slider = app.sliders.firstMatch
+        XCTAssertTrue(slider.waitForExistence(timeout: 5))
+        for target in [0.7, 0.2, 0.6] {
+            slider.adjust(toNormalizedSliderPosition: target)
+            for control in ["playPause", "previous", "next", "shuffle", "repeatMode"] {
+                XCTAssertTrue(app.buttons[control].exists)
+                XCTAssertTrue(app.buttons[control].isEnabled)
+            }
+            XCTAssertEqual(app.buttons["playPause"].label, "Pause")
+        }
+        activate(app.buttons["playPause"])
+        XCTAssertEqual(app.buttons["playPause"].label, "Play")
+        slider.adjust(toNormalizedSliderPosition: 0.3)
+        XCTAssertEqual(app.buttons["playPause"].label, "Play")
+        app.terminate()
+    }
+    #endif
     override func setUpWithError() throws { continueAfterFailure = false }
     @MainActor func application(language: String = "en") -> XCUIApplication {
         let app = XCUIApplication()

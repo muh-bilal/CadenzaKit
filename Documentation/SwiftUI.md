@@ -115,3 +115,16 @@ icons; hosts provide media visuals. The default player uses a compact artwork-le
 layout or a wide artwork/detail arrangement, with system accessibility and focus
 behavior. tvOS exposes progress as a read-only indicator; replace the progress
 component to add a host-specific remote scrubbing interaction.
+
+## Seeking
+
+The default slider previews the thumb position and elapsed-time label locally
+while dragging. Playback snapshots continue updating without moving that preview.
+Releasing the slider calls `PlayerActions.seek` once with the final bounded target;
+a drag does not issue a backend seek for every intermediate value. A target from
+a different track is discarded. tvOS retains its read-only progress indicator.
+
+Keep action handlers installed during transient operations: a missing handler
+means a control is unavailable, and optional controls disappear. Serialize commands
+in your presentation/service layer. Hosts needing continuous scrubbing can replace
+`.progress` and use `positionBinding(_:)`, which dispatches every binding update.

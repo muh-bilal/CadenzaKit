@@ -8,6 +8,7 @@ public struct CadenzaPlayerView: View {
     public var components: PlayerComponents
     public var layout: PlayerLayout
     public var arrangement: PlayerArrangement
+    @State private var scrub = PlayerScrub()
     @Environment(\.colorScheme) private var scheme
     public init(context: PlayerContext, components: PlayerComponents = .init(), layout: PlayerLayout = .standard, arrangement: PlayerArrangement = .automatic) {
         self.context = context; self.components = components; self.layout = layout; self.arrangement = arrangement
@@ -99,12 +100,12 @@ public struct CadenzaPlayerView: View {
                 ProgressView(value: context.state.position, total: max(1, context.state.duration))
                     .accessibilityLabel(context.strings.resolve(.position))
                 #else
-                Slider(value: context.actions.positionBinding(context.state), in: 0...max(1, context.state.duration))
+                Slider(value: PlayerScrub.binding($scrub, state: context.state), in: 0...max(1, context.state.duration), onEditingChanged: PlayerScrub.editing($scrub, state: context.state, seek: context.actions.seek))
                     .disabled(context.actions.seek == nil || context.state.duration == 0)
                     .accessibilityLabel(context.strings.resolve(.position))
                 #endif
                 HStack {
-                    Text(context.strings.time(context.state.position))
+                    Text(context.strings.time(scrub.position(in: context.state)))
                     Spacer(minLength: metrics.detailSpacing)
                     Text(context.strings.time(context.state.duration))
                 }.font(context.appearance.fonts.caption).foregroundStyle(colors.secondary)

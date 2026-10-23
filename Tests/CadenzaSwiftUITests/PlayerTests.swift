@@ -78,3 +78,54 @@ struct PlayerTests {
         #expect(!replaced)
     }
 }
+
+@MainActor @Test func scrubbingIgnoresPollingAndCommitsOnlyFinalTarget() throws {
+    func snapshot(_ id: String, _ position: Double, duration: Double = 24) throws -> PlayerState {
+        .init(snapshot: .init(state: .playing, resource: .init(id: try MediaID(id), url: URL(fileURLWithPath: "/test.wav"), title: id), position: position, duration: duration))
+    }
+    var scrub = PlayerScrub()
+    let initial = try snapshot("first", 3)
+    #expect(scrub.position(in: initial) == 3)
+    #expect(scrub.finish(in: initial) == nil)
+    scrub.update(8, in: initial)
+    scrub.update(17, in: initial)
+    scrub.update(.nan, in: initial)
+    let polled = try snapshot("first", 4)
+    #expect(scrub.position(in: polled) == 17)
+    #expect(scrub.finish(in: polled) == 17)
+    #expect(scrub.finish(in: polled) == nil)
+    #expect(scrub.position(in: polled) == 4)
+    scrub.update(-5, in: initial)
+    #expect(scrub.finish(in: initial) == 0)
+    scrub.update(99, in: initial)
+    let shortened = try snapshot("first", 4, duration: 10)
+    #expect(scrub.position(in: shortened) == 10)
+    #expect(scrub.finish(in: shortened) == 10)
+    scrub.update(12, in: initial)
+    let replacement = try snapshot("second", 0)
+    #expect(scrub.position(in: replacement) == 0)
+    #expect(scrub.finish(in: replacement) == nil)
+    scrub.update(12, in: initial)
+    scrub.cancel()
+    #expect(scrub.finish(in: initial) == nil)
+}
+
+@MainActor @Test func scrubBindingDefersSeeksUntilEditingEnds() {
+    var scrub = PlayerScrub()
+    let storage = Binding(get: { scrub }, set: { scrub = $0 })
+    let state = PlayerState(snapshot: .init(state: .paused, resource: nil, position: 2, duration: 24))
+    var seeks: [Double] = []
+    let value = PlayerScrub.binding(storage, state: state)
+    let editing = PlayerScrub.editing(storage, state: state, seek: { seeks.append($0) })
+    editing(true)
+    value.wrappedValue = 8
+    value.wrappedValue = 18
+    #expect(value.wrappedValue == 18)
+    #expect(seeks.isEmpty)
+    editing(false)
+    editing(false)
+    #expect(seeks == [18])
+    value.wrappedValue = 5
+    PlayerScrub.editing(storage, state: state, seek: nil)(false)
+    #expect(value.wrappedValue == 2)
+}
