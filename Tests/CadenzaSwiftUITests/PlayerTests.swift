@@ -87,24 +87,33 @@ struct PlayerTests {
     let initial = try snapshot("first", 3)
     #expect(scrub.position(in: initial) == 3)
     #expect(scrub.finish(in: initial) == nil)
+    scrub.begin()
     scrub.update(8, in: initial)
+    scrub.begin()
     scrub.update(17, in: initial)
+    scrub.begin()
     scrub.update(.nan, in: initial)
     let polled = try snapshot("first", 4)
     #expect(scrub.position(in: polled) == 17)
     #expect(scrub.finish(in: polled) == 17)
     #expect(scrub.finish(in: polled) == nil)
+    #expect(scrub.position(in: polled) == 17) // Keep the thumb stable until acknowledgement.
+    scrub.cancel()
     #expect(scrub.position(in: polled) == 4)
+    scrub.begin()
     scrub.update(-5, in: initial)
     #expect(scrub.finish(in: initial) == 0)
+    scrub.begin()
     scrub.update(99, in: initial)
     let shortened = try snapshot("first", 4, duration: 10)
     #expect(scrub.position(in: shortened) == 10)
     #expect(scrub.finish(in: shortened) == 10)
+    scrub.begin()
     scrub.update(12, in: initial)
     let replacement = try snapshot("second", 0)
     #expect(scrub.position(in: replacement) == 0)
     #expect(scrub.finish(in: replacement) == nil)
+    scrub.begin()
     scrub.update(12, in: initial)
     scrub.cancel()
     #expect(scrub.finish(in: initial) == nil)
@@ -127,5 +136,55 @@ struct PlayerTests {
     #expect(seeks == [18])
     value.wrappedValue = 5
     PlayerScrub.editing(storage, state: state, seek: nil)(false)
+    PlayerScrub.synchronizing(storage)(state.snapshot, state.snapshot)
     #expect(value.wrappedValue == 2)
+}
+
+@MainActor @Test func lateSliderUpdatesDoNotSeekAgainAndSnapshotsResumeAfterRelease() throws {
+    var scrub = PlayerScrub()
+    let storage = Binding(get: { scrub }, set: { scrub = $0 })
+    let before = PlayerState(snapshot: .init(state: .playing, resource: nil, position: 2, duration: 24))
+    var seeks: [Double] = []
+    let binding = PlayerScrub.binding(storage, state: before)
+    let editing = PlayerScrub.editing(storage, state: before, seek: { seeks.append($0) })
+    let synchronize = PlayerScrub.synchronizing(storage)
+    binding.wrappedValue = 8
+    #expect(binding.wrappedValue == 2)
+    editing(true)
+    binding.wrappedValue = .nan
+    binding.wrappedValue = 17
+    let tick = PlaybackSnapshot(state: .playing, resource: nil, position: 3, duration: 24)
+    synchronize(before.snapshot, tick)
+    #expect(binding.wrappedValue == 17)
+    #expect(seeks.isEmpty)
+    editing(false)
+    binding.wrappedValue = 17 // Platform callback after release must not create another seek.
+    #expect(seeks == [17])
+    #expect(!scrub.isEditing)
+    let after = PlayerState(snapshot: .init(state: .playing, resource: nil, position: 19, duration: 24))
+    synchronize(tick, after.snapshot)
+    #expect(scrub.position(in: after) == 19)
+    #expect(seeks == [17])
+    editing(true)
+    binding.wrappedValue = 5
+    let replacement = PlaybackSnapshot(state: .paused, resource: .init(id: try MediaID("replacement"), url: URL(fileURLWithPath: "/other.wav"), title: "Other"), position: 0, duration: 24)
+    synchronize(after.snapshot, replacement)
+    #expect(!scrub.isEditing)
+    #expect(scrub.finish(in: .init(snapshot: replacement)) == nil)
+}
+
+@MainActor @Test func accessibleSeeksAreBoundedAndClearAnyPreview() {
+    var scrub = PlayerScrub()
+    let storage = Binding(get: { scrub }, set: { scrub = $0 })
+    let state = PlayerState(snapshot: .init(state: .paused, resource: nil, position: 2, duration: 4))
+    var seeks: [Double] = []
+    let adjust = PlayerScrub.adjusting(storage, state: state, step: 5, seek: { seeks.append($0) })
+    scrub.begin(); scrub.update(3, in: state)
+    adjust(.increment); adjust(.decrement)
+    #expect(seeks == [4, 0])
+    #expect(!scrub.isEditing)
+    PlayerScrub.adjusting(storage, state: state, step: .nan, seek: { seeks.append($0) })(.increment)
+    PlayerScrub.adjusting(storage, state: state, step: 0, seek: { seeks.append($0) })(.decrement)
+    PlayerScrub.adjusting(storage, state: state, step: 1, seek: nil)(.increment)
+    #expect(seeks == [4, 0])
 }

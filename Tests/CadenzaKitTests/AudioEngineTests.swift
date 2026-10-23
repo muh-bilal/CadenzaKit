@@ -107,3 +107,26 @@ struct AudioEngineTests {
         await #expect(throws: CadenzaError.featureUnavailable(.playback, .disabled)) { try await disabled.load(media.id) }
     }
 }
+
+extension AudioEngineTests {
+    @Test func devicePositionContinuesAfterForwardAndBackwardSeeks() async throws {
+        let media = try LocalPlaybackIntegrationTests().fixture()
+        defer { try? FileManager.default.removeItem(at: media.url) }
+        let backend = AVAudioEngineBackend()
+        defer { backend.stop() }
+        let session = try kit(media).makeSession(backend: backend)
+        try await session.load(media.id)
+        try await session.play()
+        for target in [0.1, 0.3, 0.05] {
+            try await session.seek(to: target)
+            let clock = ContinuousClock()
+            let deadline = clock.now.advanced(by: .seconds(3))
+            repeat {
+                try await Task.sleep(for: .milliseconds(10))
+                try await session.refresh()
+            } while session.snapshot.position <= target + 0.02 && clock.now < deadline
+            #expect(session.snapshot.position > target + 0.02)
+            #expect(session.snapshot.state == .playing)
+        }
+    }
+}

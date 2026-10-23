@@ -8,6 +8,7 @@ public struct CadenzaPlayerView: View {
     public var components: PlayerComponents
     public var layout: PlayerLayout
     public var arrangement: PlayerArrangement
+    @FocusState private var focusedControl: PlayerControl?
     @State private var scrub = PlayerScrub()
     @Environment(\.colorScheme) private var scheme
     public init(context: PlayerContext, components: PlayerComponents = .init(), layout: PlayerLayout = .standard, arrangement: PlayerArrangement = .automatic) {
@@ -97,15 +98,25 @@ public struct CadenzaPlayerView: View {
         case .progress:
             VStack(spacing: metrics.detailSpacing) {
                 #if os(tvOS)
-                ProgressView(value: context.state.position, total: max(1, context.state.duration))
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(colors.progressTrack)
+                        Capsule().fill(colors.accent)
+                            .frame(width: geometry.size.width * CGFloat(context.state.position / max(1, context.state.duration)))
+                    }
+                }.frame(height: metrics.progressHeight)
+                    .accessibilityElement(children: .ignore)
                     .accessibilityLabel(context.strings.resolve(.position))
+                    .accessibilityValue(context.strings.time(context.state.position))
                 #else
                 Slider(value: PlayerScrub.binding($scrub, state: context.state), in: 0...max(1, context.state.duration), onEditingChanged: PlayerScrub.editing($scrub, state: context.state, seek: context.actions.seek))
+                    .accessibilityAdjustableAction(PlayerScrub.adjusting($scrub, state: context.state, step: metrics.seekIncrement, seek: context.actions.seek))
+                    .onChange(of: context.state.snapshot, PlayerScrub.synchronizing($scrub))
                     .disabled(context.actions.seek == nil || context.state.duration == 0)
                     .accessibilityLabel(context.strings.resolve(.position))
                 #endif
                 HStack {
-                    Text(context.strings.time(scrub.position(in: context.state)))
+                    Text(context.strings.time(scrub.position(in: context.state))).accessibilityIdentifier("elapsed-time")
                     Spacer(minLength: metrics.detailSpacing)
                     Text(context.strings.time(context.state.duration))
                 }.font(context.appearance.fonts.caption).foregroundStyle(colors.secondary)
@@ -150,21 +161,38 @@ public struct CadenzaPlayerView: View {
                     if let icon { context.images.resolve(icon).resizable().scaledToFit().frame(width: metrics.iconSize, height: metrics.iconSize) }
                     else { Text(label).font(context.appearance.fonts.button) }
                 }
+                #if os(tvOS)
+                .padding(.horizontal, metrics.controlHorizontalPadding)
+                #endif
                 .frame(minWidth: role == .playPause ? metrics.primarySize : metrics.targetSize,
                        minHeight: role == .playPause ? metrics.primarySize : metrics.targetSize)
                 .foregroundStyle(role == .playPause ? colors.onAccent : selected ? colors.accent : colors.foreground)
                 .background(role == .playPause ? colors.accent : Color.clear, in: RoundedRectangle(cornerRadius: metrics.primaryRadius))
+                #if os(tvOS)
+                .background(colors.controlBackground, in: RoundedRectangle(cornerRadius: metrics.primaryRadius))
+                .overlay {
+                    RoundedRectangle(cornerRadius: metrics.primaryRadius)
+                        .strokeBorder(colors.focusRing, lineWidth: focusedControl == role ? metrics.focusRingWidth : 0)
+                        .padding(-metrics.focusRingPadding)
+                }
+                #endif
                 .contentShape(Rectangle())
             }
+            .buttonStyle(PlayerControlStyle())
             #if os(tvOS)
-            .buttonStyle(.borderless)
-            #else
-            .buttonStyle(.plain)
+            .focused($focusedControl, equals: role)
             #endif
             .disabled(!enabled)
             .accessibilityLabel(label)
             .accessibilityValue(selected ? context.strings.resolve(text) : "")
             .accessibilityIdentifier(role.rawValue)
         }
+    }
+}
+
+// A custom style avoids tvOS adding a second focus plate over the host palette.
+private struct PlayerControlStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label.opacity(configuration.isPressed ? 0.8 : 1)
     }
 }

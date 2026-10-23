@@ -128,3 +128,29 @@ Keep action handlers installed during transient operations: a missing handler
 means a control is unavailable, and optional controls disappear. Serialize commands
 in your presentation/service layer. Hosts needing continuous scrubbing can replace
 `.progress` and use `positionBinding(_:)`, which dispatches every binding update.
+
+The slider retains its released thumb position until the next playback snapshot,
+then resumes tracking the backend. Late value callbacks cannot issue another seek.
+Accessibility adjustments use `PlayerMetrics.seekIncrement` (five seconds by
+default), clamped to the media duration, and do not leave a drag preview active.
+
+## Appearance and TV focus
+
+The entire default player follows SwiftUI's `colorScheme`. Configure
+`PlayerAppearance.light` and `.dark` independently, or apply
+`.preferredColorScheme(.dark)` to your host presentation. The showcase's Customize
+panel includes persistent System, Light, and Dark choices.
+
+On tvOS, default icons are 36 points, control targets are 80 points, and the
+primary control is 96 points. A focus outline keeps the focused control distinct
+without replacing its foreground with a system highlight color. Customize
+`focusRing`, `controlBackground`, `progressTrack`, `focusRingWidth`,
+`focusRingPadding`, `controlHorizontalPadding`, and `progressHeight` alongside
+the existing size and color tokens. Custom button builders remain fully replaceable.
+
+
+TV appearance captures from the running example app:
+
+| Light | Dark |
+| --- | --- |
+| ![TV player in light mode](Images/showcase-tv.png) | ![TV player in dark mode](Images/showcase-tv-dark.png) |

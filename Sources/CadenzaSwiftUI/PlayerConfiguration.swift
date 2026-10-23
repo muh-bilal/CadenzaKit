@@ -61,6 +61,9 @@ public struct PlayerColors {
     public var secondary: Color = .secondary
     public var accent: Color
     public var onAccent: Color = .white
+    public var progressTrack: Color = .primary.opacity(0.22)
+    public var focusRing: Color = .primary
+    public var controlBackground: Color = .primary.opacity(0.08)
     public var artworkBackground: Color = .secondary.opacity(0.08)
     public var artworkShadow: Color = .black.opacity(0.16)
     public init(background: Color = Color(red: 0.975, green: 0.974, blue: 0.961), accent: Color = Color(red: 0.13, green: 0.40, blue: 0.34), onAccent: Color = .white) {
@@ -89,10 +92,22 @@ public struct PlayerMetrics {
     public var artworkMaximum: CGFloat = 420
     public var artworkShadowRadius: CGFloat = 24
     public var artworkShadowY: CGFloat = 16
+    public var seekIncrement: Double = 5
+    public var controlHorizontalPadding: CGFloat = 16
+    public var progressHeight: CGFloat = 8
+    public var focusRingWidth: CGFloat = 4
+    public var focusRingPadding: CGFloat = 6
+    #if os(tvOS)
+    public var targetSize: CGFloat = 80
+    public var iconSize: CGFloat = 36
+    public var primarySize: CGFloat = 96
+    public var primaryRadius: CGFloat = 48
+    #else
     public var targetSize: CGFloat = 44
     public var iconSize: CGFloat = 18
     public var primarySize: CGFloat = 58
     public var primaryRadius: CGFloat = 29
+    #endif
     public var maximumWidth: CGFloat = 480
     public var wideBreakpoint: CGFloat = 750
     public var wideArtworkWidth: CGFloat = 460

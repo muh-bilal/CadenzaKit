@@ -6,6 +6,7 @@ struct DemoPlayerScreen: View {
     @ObservedObject var player: Showcase
     let model: DemoModel
     @Environment(\.colorScheme) private var scheme
+    @AppStorage("showcase-appearance") private var appearanceMode = 0
     @State private var empty: Bool
     @State private var panel: Panel?
     @State private var titleSize: Double
@@ -42,8 +43,7 @@ struct DemoPlayerScreen: View {
         value.fonts.title = .system(size: titleSize * 2, weight: .semibold)
         value.metrics.padding = 60; value.metrics.spacing = 44
         value.metrics.wideArtworkWidth = 620; value.metrics.wideContentWidth = 740
-        value.metrics.artworkMaximum = 620; value.metrics.primarySize = 72
-        value.metrics.primaryRadius = 36; value.metrics.iconSize = 24
+        value.metrics.artworkMaximum = 620
         #endif
         return value
     }
@@ -94,7 +94,7 @@ struct DemoPlayerScreen: View {
                         .background(colors.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
                 }
                 #if os(tvOS)
-                .buttonStyle(.borderless)
+                .buttonStyle(.bordered)
                 #else
                 .buttonStyle(.plain)
                 #endif
@@ -125,6 +125,7 @@ struct DemoPlayerScreen: View {
             }
             .background(colors.background).foregroundStyle(colors.foreground).tint(colors.accent)
         }
+        .preferredColorScheme(appearanceMode == 0 ? nil : appearanceMode == 1 ? .light : .dark)
         .sheet(item: $panel) { panel in
             let title = demoText(panel == .options ? "Customize" : panel == .queue ? "Up next" : "Equalizer")
             #if os(tvOS)
@@ -137,7 +138,7 @@ struct DemoPlayerScreen: View {
                 panelContent(panel)
             }.padding(40).frame(width: 1000, height: 850)
                 .background(colors.background).foregroundStyle(colors.foreground)
-                .buttonStyle(.borderless)
+                .buttonStyle(.bordered)
                 .onExitCommand { self.panel = nil }
             #else
             NavigationStack {
@@ -169,9 +170,12 @@ struct DemoPlayerScreen: View {
             Spacer()
             Button(demoText("Default")) { empty = false }.accessibilityIdentifier("layout-default")
             Button(demoText("Empty")) { empty = true }.accessibilityIdentifier("layout-empty")
-            Button { panel = .options } label: { Image(systemName: "slider.horizontal.3") }
+            Button { panel = .options } label: { Label(demoText("Customize"), systemImage: "slider.horizontal.3") }
                 .accessibilityLabel(demoText("Customize")).accessibilityIdentifier("customize")
         }.font(.caption).demoButtonStyle().padding(.horizontal, 24).padding(.vertical, 8)
+        #if os(tvOS)
+        .tint(colors.controlBackground)
+        #endif
     }
 
     private func desktop(width: CGFloat) -> some View {
@@ -279,6 +283,15 @@ struct DemoPlayerScreen: View {
             Toggle(demoText("Replace every button"), isOn: $customButtons).accessibilityIdentifier("custom-buttons")
             Button(demoText("Reset appearance")) { titleSize = 24; accent = 0; customImages = false; customText = false; customButtons = false }.accessibilityIdentifier("reset-appearance")
             Divider()
+            HStack {
+                Text(demoText("Appearance"))
+                Button(demoText("System")) { appearanceMode = 0 }.accessibilityIdentifier("appearance-system")
+                Button(demoText("Light")) { appearanceMode = 1 }.accessibilityIdentifier("appearance-light")
+                Button(demoText("Dark")) { appearanceMode = 2 }.accessibilityIdentifier("appearance-dark")
+            }
+            #if os(tvOS)
+            .focusSection()
+            #endif
             Button(demoText("Forward 5 seconds")) { player.send(.seek(min(model.queue.snapshot.duration, model.queue.snapshot.position + 5))) }
                 .disabled(model.queue.snapshot.resource == nil).accessibilityIdentifier("seek-forward")
             Button(demoText("Shuffle")) { player.send(.shuffle) }.accessibilityIdentifier("settings-shuffle")
@@ -300,7 +313,7 @@ struct DemoPlayerScreen: View {
 private extension View {
     @ViewBuilder func demoButtonStyle() -> some View {
         #if os(tvOS)
-        self.buttonStyle(.borderless)
+        self.buttonStyle(.bordered)
         #else
         self.buttonStyle(.bordered)
         #endif

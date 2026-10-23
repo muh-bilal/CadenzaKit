@@ -14,6 +14,11 @@ final class ShowcaseTests: XCTestCase {
                 XCTAssertTrue(app.buttons[control].isEnabled)
             }
             XCTAssertEqual(app.buttons["playPause"].label, "Pause")
+            let elapsed = app.staticTexts["elapsed-time"]
+            let initial = elapsed.label
+            let advancing = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label != %@", initial), object: elapsed)
+            let result = XCTWaiter.wait(for: [advancing], timeout: 4)
+            XCTAssertEqual(result, .completed, "Elapsed time must advance after seeking")
         }
         activate(app.buttons["playPause"])
         XCTAssertEqual(app.buttons["playPause"].label, "Play")
@@ -22,6 +27,26 @@ final class ShowcaseTests: XCTestCase {
         app.terminate()
     }
     #endif
+    @MainActor func testWholePlayerAppearanceAndFocus() {
+        let app = application(); app.launch()
+        for mode in ["dark", "light", "system"] {
+            activate(app.buttons["customize"])
+            activate(app.buttons["appearance-" + mode])
+            dismissPanel(in: app)
+            XCTAssertTrue(app.buttons["playPause"].exists)
+            #if os(tvOS)
+            activate(app.buttons["playPause"])
+            XCTAssertTrue(app.buttons["playPause"].hasFocus)
+            XCTAssertGreaterThanOrEqual(app.buttons["playPause"].frame.width, 96)
+            #endif
+            let shot = XCTAttachment(screenshot: app.screenshot())
+            shot.name = "Player appearance " + mode
+            shot.lifetime = .keepAlways
+            add(shot)
+        }
+        app.terminate()
+    }
+
     override func setUpWithError() throws { continueAfterFailure = false }
     @MainActor func application(language: String = "en") -> XCUIApplication {
         let app = XCUIApplication()
@@ -64,6 +89,17 @@ final class ShowcaseTests: XCTestCase {
     @MainActor func activate(_ element: XCUIElement) {
         XCTAssertTrue(element.waitForExistence(timeout: 15))
         #if !os(tvOS)
+        // Customize is intentionally scrollable as host options grow. Exercise
+        // real scrolling before requiring an offscreen control to be hittable.
+        for _ in 0..<5 where !element.isHittable {
+            guard let scroll = XCUIApplication().scrollViews.allElementsBoundByIndex.last(where: { $0.isHittable }) else { break }
+            let above = element.frame.maxY < scroll.frame.minY
+            #if os(macOS)
+            scroll.scroll(byDeltaX: 0, deltaY: above ? 240 : -240)
+            #else
+            if above { scroll.swipeDown() } else { scroll.swipeUp() }
+            #endif
+        }
         let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isHittable == true AND isEnabled == true"), object: element)
         XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 10), .completed)
         #endif
