@@ -1,0 +1,76 @@
+name: Player UI validation
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+    paths:
+      - 'Examples/CadenzaDemo/**'
+      - '!Examples/CadenzaDemo/**/*.md'
+      - 'Sources/CadenzaSwiftUI/**'
+      - 'Sources/CadenzaPresentation/**'
+      - 'Tests/CadenzaSwiftUITests/**'
+      - 'Package.swift'
+      - 'Tools/SimulatorDestination.swift'
+      - '.github/workflows/ui.yml'
+  pull_request:
+    paths:
+      - 'Examples/CadenzaDemo/**'
+      - '!Examples/CadenzaDemo/**/*.md'
+      - 'Sources/CadenzaSwiftUI/**'
+      - 'Sources/CadenzaPresentation/**'
+      - 'Tests/CadenzaSwiftUITests/**'
+      - 'Package.swift'
+      - 'Tools/SimulatorDestination.swift'
+      - '.github/workflows/ui.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ui-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  ui:
+    name: UI (${{ matrix.platform }})
+    runs-on: macos-15
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macOS
+            scheme: CadenzamacOS
+          - platform: iPhone
+            scheme: CadenzaiOS
+          - platform: iPad
+            scheme: CadenzaiOS
+          - platform: tvOS
+            scheme: CadenzatvOS
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      PLATFORM: ${{ matrix.platform }}
+      SCHEME: ${{ matrix.scheme }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Resolve destination
+        run: |
+          if [ "$PLATFORM" = macOS ]; then
+            echo 'DESTINATION=platform=macOS' >> "$GITHUB_ENV"
+          else
+            echo "DESTINATION=$(swift Tools/SimulatorDestination.swift "$PLATFORM")" >> "$GITHUB_ENV"
+          fi
+      - name: UI regression tests
+        run: >-
+          xcodebuild test -project Examples/CadenzaDemo/CadenzaDemo.xcodeproj
+          -scheme "$SCHEME" -destination "$DESTINATION"
+          -derivedDataPath "$RUNNER_TEMP/DemoUI"
+          -resultBundlePath "$RUNNER_TEMP/PlayerUI.xcresult"
+          -only-testing:"${SCHEME}UITests" -parallel-testing-enabled NO CODE_SIGN_IDENTITY=-
+      - name: Upload UI results and screenshots
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ui-results-${{ matrix.platform }}
+          path: ${{ runner.temp }}/PlayerUI.xcresult
+          retention-days: 7

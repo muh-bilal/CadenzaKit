@@ -1,0 +1,98 @@
+name: SDK and demo validation
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sdk-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    name: SDK and demo (${{ matrix.platform }})
+    runs-on: macos-15
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macOS
+            scheme: CadenzamacOS
+          - platform: iPhone
+            scheme: CadenzaiOS
+          - platform: iPad
+            scheme: CadenzaiOS
+          - platform: tvOS
+            scheme: CadenzatvOS
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      PLATFORM: ${{ matrix.platform }}
+      SCHEME: ${{ matrix.scheme }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Toolchain and simulator selection tests
+        run: |
+          xcodebuild -version
+          swift --version
+          swift Tools/SimulatorDestination.swift --self-test
+      - name: Full SDK regression and coverage gates
+        run: swift Tools/Validate.swift CI "$PLATFORM"
+      - name: Independently selectable products
+        if: matrix.platform == 'macOS'
+        run: swift Tools/ValidateConsumers.swift
+      - name: Resolve demo destination
+        run: |
+          if [ "$PLATFORM" = macOS ]; then
+            echo 'DESTINATION=platform=macOS' >> "$GITHUB_ENV"
+          else
+            echo "DESTINATION=$(swift Tools/SimulatorDestination.swift "$PLATFORM")" >> "$GITHUB_ENV"
+          fi
+      - name: Demo model and real-adapter tests
+        if: matrix.platform == 'macOS'
+        run: >-
+          xcodebuild test -project Examples/CadenzaDemo/CadenzaDemo.xcodeproj
+          -scheme "$SCHEME" -destination "$DESTINATION"
+          -derivedDataPath "$RUNNER_TEMP/Demo"
+          -resultBundlePath .build/validation/CI/DemoModel.xcresult
+          -only-testing:ShowcaseModelTests -parallel-testing-enabled NO CODE_SIGN_IDENTITY=-
+      - name: Build release demo
+        run: >-
+          xcodebuild build -configuration Release
+          -project Examples/CadenzaDemo/CadenzaDemo.xcodeproj
+          -scheme "$SCHEME" -destination "$DESTINATION"
+          -derivedDataPath "$RUNNER_TEMP/Demo" CODE_SIGN_IDENTITY=-
+      - name: Package demo for manual or tagged validation
+        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+        run: |
+          if [ "$PLATFORM" = macOS ]; then
+            product="$RUNNER_TEMP/Demo/Build/Products/Release/$SCHEME.app"
+          elif [ "$PLATFORM" = tvOS ]; then
+            product="$RUNNER_TEMP/Demo/Build/Products/Release-appletvsimulator/$SCHEME.app"
+          else
+            product="$RUNNER_TEMP/Demo/Build/Products/Release-iphonesimulator/$SCHEME.app"
+          fi
+          ditto -c -k --sequesterRsrc --keepParent "$product" "$RUNNER_TEMP/CadenzaDemo-$PLATFORM.zip"
+      - name: Upload demo artifact
+        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: CadenzaDemo-${{ matrix.platform }}
+          path: ${{ runner.temp }}/CadenzaDemo-${{ matrix.platform }}.zip
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: sdk-results-${{ matrix.platform }}
+          include-hidden-files: true
+          path: |
+            .build/validation/CI/*.log
+            .build/validation/CI/*.txt
+            .build/validation/CI/*.xcresult
+          retention-days: 7

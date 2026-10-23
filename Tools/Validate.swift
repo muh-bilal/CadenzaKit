@@ -1,11 +1,15 @@
 import Foundation
 
-// Run from the repository root: swift Tools/Validate.swift Local
+// Run from the repository root: swift Tools/Validate.swift Local [macOS|iPhone|iPad|tvOS]
+// Without a platform, run all SDK gates. UI tests have a separate workflow.
 // This orchestration utility is not shipped in an SDK product.
 struct ValidationFailure: Error { let message: String }
 do {
 let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
 let runName = CommandLine.arguments.dropFirst().first ?? "Manual"
+let selectedPlatform = CommandLine.arguments.dropFirst(2).first
+let platforms = ["macOS", "iPhone", "iPad", "tvOS"]
+guard selectedPlatform == nil || platforms.contains(selectedPlatform!) else { throw ValidationFailure(message: "Unknown platform") }
 let artifacts = root.appendingPathComponent(".build/validation/\(runName)")
 try FileManager.default.createDirectory(at: artifacts, withIntermediateDirectories: true)
 
@@ -22,7 +26,7 @@ func run(_ arguments: [String], log name: String) throws -> String {
     process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
     process.arguments = arguments
     var environment = ProcessInfo.processInfo.environment
-    environment["DEVELOPER_DIR"] = "/Applications/Xcode.app/Contents/Developer"
+    if environment["DEVELOPER_DIR"] == nil { environment["DEVELOPER_DIR"] = "/Applications/Xcode.app/Contents/Developer" }
     process.environment = environment
     process.standardOutput = handle
     process.standardError = handle
@@ -35,6 +39,7 @@ func run(_ arguments: [String], log name: String) throws -> String {
     return try String(contentsOf: logURL, encoding: .utf8)
 }
 
+if selectedPlatform == nil || selectedPlatform == "macOS" {
 try run(["swift", "build"], log: "build.log")
 try run(["swift", "test", "--enable-code-coverage"], log: "swift.log")
 
@@ -52,7 +57,7 @@ struct Coverage: Decodable {
     }
     let data: [Datum]
 }
-let coveragePath = root.appendingPathComponent(".build/arm64-apple-macosx/debug/codecov/CadenzaKit.json")
+let coveragePath = URL(fileURLWithPath: try run(["swift", "test", "--show-codecov-path"], log: "coverage-path.log").trimmingCharacters(in: .whitespacesAndNewlines))
 let coverage = try JSONDecoder().decode(Coverage.self, from: Data(contentsOf: coveragePath))
 let sourceRoot = root.appendingPathComponent("Sources").path + "/"
 let files = coverage.data.flatMap(\.files).filter { $0.filename.hasPrefix(sourceRoot) }
@@ -73,18 +78,16 @@ guard files.allSatisfy({ $0.summary.lines.covered == $0.summary.lines.count }) e
     throw ValidationFailure(message: "Owned production line coverage is below 100%")
 }
 
-// Separate platforms: this Xcode crashes when a package test command mixes SDKs.
-let destinations = [
-    ("macOS", "platform=macOS"),
-    ("iPhone", "platform=iOS Simulator,id=113657B5-DCC6-4619-A0EA-F1AF8650B69C"),
-    ("iPad", "platform=iOS Simulator,id=9550BD2F-73CE-40DB-A39D-F74B6DE775D5"),
-    ("tvOS", "platform=tvOS Simulator,id=B4F98CFA-6645-425D-BA4F-148261250A42")
-]
-for (name, destination) in destinations {
+}
+
+// Separate platforms: Xcode package tests must not mix SDKs in one invocation.
+for name in platforms where selectedPlatform == nil || selectedPlatform == name {
+    let destination = name == "macOS" ? "platform=macOS" : try run(
+        ["swift", "Tools/SimulatorDestination.swift", name], log: "\(name)-destination.log").trimmingCharacters(in: .whitespacesAndNewlines)
     try run([
         "xcodebuild", "test", "-scheme", "CadenzaKit-Package",
         "-destination", destination, "-parallel-testing-enabled", "NO",
-        "-enableCodeCoverage", "YES", "-derivedDataPath", "/tmp/CadenzaKitDerivedData",
+        "-enableCodeCoverage", "YES", "-derivedDataPath", artifacts.appendingPathComponent("DerivedData-\(name)").path,
         "-resultBundlePath", artifacts.appendingPathComponent("\(name).xcresult").path
     ], log: "\(name).log")
 }

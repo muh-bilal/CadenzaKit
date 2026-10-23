@@ -7,7 +7,7 @@ Compose local or HTTPS playback, queues, playlists, bookmarks, artwork, offline
 storage, and native equalization through independently selectable package products.
 Your app owns the UI; the SDK owns playback and service logic.
 
-[Integration guide](Documentation/Integration.md) · [Xcode example apps](Examples/CadenzaDemo)
+[Integration guide](Documentation/Integration.md) · [Xcode example apps](Examples/CadenzaDemo) · [Build and test](Documentation/Testing.md)
 
 Optional [SwiftUI components](Documentation/SwiftUI.md) provide configurable defaults
 and full component/layout replacement without coupling UI to playback services.
