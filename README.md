@@ -9,6 +9,9 @@ Your app owns the UI; the SDK owns playback and service logic.
 
 [Integration guide](Documentation/Integration.md) · [Xcode example apps](Examples/CadenzaShowcase)
 
+Optional [SwiftUI components](Documentation/SwiftUI.md) provide configurable defaults
+and full component/layout replacement without coupling UI to playback services.
+
 ## Usage
 
 Add `https://github.com/muh-bilal/CadenzaKit` in Xcode's **Add Package Dependencies**

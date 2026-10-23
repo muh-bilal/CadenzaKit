@@ -2,6 +2,9 @@
 
 [Overview and screenshots](../README.md) · [Run the Xcode example apps](../Examples/CadenzaShowcase/README.md)
 
+[Optional customizable SwiftUI player](SwiftUI.md): use the default skin, override
+design tokens/assets/text/components, or supply a completely empty/custom layout.
+
 A modular Swift music SDK for iOS/iPadOS 17+, macOS 14+, and tvOS 17+.
 Swift 6 concurrency checking is enabled.
 
