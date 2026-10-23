@@ -39,7 +39,7 @@ struct DemoTests {
     @Test func generatedAudioPlaysThroughRealAdapterAndBookmarksSurviveRestart() async throws {
         let directory = try directory(); defer { try? FileManager.default.removeItem(at: directory) }
         let tracks = try DemoAudio.create(in: directory)
-        #expect(tracks.count == 3)
+        #expect(tracks.count == 4)
         let audio = try AVAudioFile(forReading: tracks[0].url)
         #expect(audio.length == 24 * 22_050)
         let storeURL = directory.appendingPathComponent("bookmarks.json")

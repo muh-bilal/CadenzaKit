@@ -32,6 +32,9 @@ public struct CadenzaPlayerView: View {
                                     part(.metadata); part(.transport); part(.accessories); part(.footer)
                                 }.frame(maxWidth: metrics.wideContentWidth)
                             }
+                            #if os(tvOS)
+                            .frame(maxWidth: .infinity).focusSection()
+                            #endif
                             part(.progress)
                         }.padding(metrics.padding)
                     } else {
@@ -50,7 +53,13 @@ public struct CadenzaPlayerView: View {
 
     @ViewBuilder private func part(_ part: PlayerPart) -> some View {
         if let replacement = components.parts[part] { replacement(context) }
-        else { standard(part) }
+        else {
+            #if os(tvOS)
+            standard(part).focusSection()
+            #else
+            standard(part)
+            #endif
+        }
     }
 
     @ViewBuilder private func standard(_ part: PlayerPart) -> some View {
@@ -101,15 +110,15 @@ public struct CadenzaPlayerView: View {
                 }.font(context.appearance.fonts.caption).foregroundStyle(colors.secondary)
             }
         case .transport:
-            HStack(spacing: metrics.detailSpacing) {
+            HStack(spacing: 0) {
                 optional(.shuffle, icon: .shuffle, text: context.state.shuffle ? .shuffleOn : .shuffleOff, selected: context.state.shuffle)
-                Spacer(minLength: metrics.detailSpacing)
+                Spacer(minLength: 0)
                 control(.previous, icon: .previous, text: .previous)
-                Spacer(minLength: metrics.detailSpacing)
+                Spacer(minLength: 0)
                 control(.playPause, icon: context.state.isPlaying ? .pause : .play, text: context.state.isPlaying ? .pause : .play)
-                Spacer(minLength: metrics.detailSpacing)
+                Spacer(minLength: 0)
                 control(.next, icon: .next, text: .next)
-                Spacer(minLength: metrics.detailSpacing)
+                Spacer(minLength: 0)
                 optional(.repeatMode, icon: context.state.repeatMode == .one ? .repeatOne : .repeatAll, text: context.state.repeatMode == .off ? .repeatOff : context.state.repeatMode == .one ? .repeatOne : .repeatAll, selected: context.state.repeatMode != .off)
             }
         case .accessories:
@@ -144,8 +153,13 @@ public struct CadenzaPlayerView: View {
                        minHeight: role == .playPause ? metrics.primarySize : metrics.targetSize)
                 .foregroundStyle(role == .playPause ? colors.onAccent : selected ? colors.accent : colors.foreground)
                 .background(role == .playPause ? colors.accent : Color.clear, in: RoundedRectangle(cornerRadius: metrics.primaryRadius))
+                .contentShape(Rectangle())
             }
+            #if os(tvOS)
+            .buttonStyle(.borderless)
+            #else
             .buttonStyle(.plain)
+            #endif
             .disabled(!enabled)
             .accessibilityLabel(label)
             .accessibilityValue(selected ? context.strings.resolve(text) : "")

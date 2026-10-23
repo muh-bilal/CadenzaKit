@@ -29,7 +29,7 @@ a signed/notarized distribution archive. Quit with Command-Q or the app menu.
 
 ## Try it
 
-1. Choose one of the three original arpeggios. The real AVPlayer backend plays it.
+1. Choose one of the four original arpeggios. The real AVPlayer backend plays it.
 2. Pause/resume, seek with the position slider, or select another track.
 3. Toggle shuffle and cycle repeat through off/all/one. EOF advances the queue.
 4. Save a position, quit, relaunch, and choose **Resume bookmark**.

@@ -13,16 +13,18 @@ public final class DemoModel {
     }
     public let tracks: [MediaResource]
     public let queue: PlaybackQueue
+    public let cadenza: Cadenza
     public private(set) var saved: PositionBookmark?
     public private(set) var message = "Choose a track to start listening."
     private let bookmarks: BookmarkService
     public var didChange: (() -> Void)?
 
-    public init(tracks: [MediaResource], backend: any PlaybackBackend, store: any DocumentStore) throws {
+    public init(tracks: [MediaResource], backend: any PlaybackBackend, store: any DocumentStore, features: FeatureFlags = .init()) throws {
         guard Set(tracks.map(\.id)).count == tracks.count else { throw CadenzaError.resourceIdentityMismatch }
         self.tracks = tracks
         let source = try LocalFileSource(resources: Dictionary(uniqueKeysWithValues: tracks.map { ($0.id, $0) }))
-        let kit = try Cadenza(configuration: .init(defaultProvider: source.identifier), providers: [source])
+        let kit = try Cadenza(configuration: .init(defaultProvider: source.identifier, features: features), providers: [source])
+        cadenza = kit
         queue = kit.makeQueue(backend: backend)
         bookmarks = kit.makeBookmarks(store: store)
         for track in tracks { try queue.insert(.init(id: UUID(), mediaID: track.id), at: queue.entries.count) }
@@ -81,7 +83,7 @@ public enum DemoAudio {
     public static func create(in directory: URL) throws -> [MediaResource] {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let format = AVAudioFormat(standardFormatWithSampleRate: 22_050, channels: 1)!
-        let titles = ["After the light", "Soft geometry", "Blue hour"]
+        let titles = ["After the light", "Soft geometry", "Blue hour", "Open windows"]
         return try titles.enumerated().map { track, title in
             let url = directory.appendingPathComponent("demo-\(track).wav")
             let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 22_050 * 24)!

@@ -30,7 +30,7 @@ public final class DemoWindow: NSObject, NSWindowDelegate {
         sidebar.addArrangedSubview(label("cadenza.", size: 29, weight: .bold))
         sidebar.addArrangedSubview(label("YOUR LISTENING ROOM", size: 10, weight: .semibold, secondary: true))
         sidebar.addArrangedSubview(label("Evening rotation", size: 15, weight: .medium))
-        sidebar.addArrangedSubview(label("3 original sketches\n24 seconds each\nGenerated on your Mac", size: 12, secondary: true))
+        sidebar.addArrangedSubview(label("\(model.tracks.count) original sketches\n24 seconds each\nGenerated on your Mac", size: 12, secondary: true))
         sidebar.addArrangedSubview(button("Resume bookmark", symbol: "bookmark", command: .resumeBookmark))
         sidebar.addArrangedSubview(label("Powered by CadenzaKit\nLocal playback · No account", size: 11, secondary: true))
         sidebar.widthAnchor.constraint(equalToConstant: 205).isActive = true
@@ -44,7 +44,7 @@ public final class DemoWindow: NSObject, NSWindowDelegate {
         artwork.widthAnchor.constraint(equalToConstant: 160).isActive = true
         let heroText = stack(); heroText.spacing = 12
         heroText.addArrangedSubview(label("Evening rotation", size: 24, weight: .semibold))
-        heroText.addArrangedSubview(label("Three short, original arpeggios.\nA quiet moment, made on your Mac.", size: 14, secondary: true))
+        heroText.addArrangedSubview(label("Short, original arpeggios.\nA quiet moment, made on your Mac.", size: 14, secondary: true))
         heroText.addArrangedSubview(label("LOCAL COLLECTION  /  01", size: 10, weight: .medium, secondary: true))
         let hero = NSStackView(views: [artwork, heroText]); hero.spacing = 24
         main.addArrangedSubview(hero)

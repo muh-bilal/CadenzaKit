@@ -47,7 +47,9 @@ products, persistence, capability checks, and complete usage examples.
 
 Open `Examples/CadenzaShowcase/CadenzaShowcase.xcodeproj` and select `CadenzaiOS`
 (iPhone/iPad), `CadenzamacOS`, or `CadenzatvOS`. Each app uses this checkout's
-CadenzaKit package for playback, queue behavior and saved positions.
+CadenzaKit package for playback, queue behavior, saved positions and equalization.
+Choose **Default** for the supplied player layout, **Empty** for a blank SDK view,
+or **Customize** to change fonts, colors, assets, labels and button implementations.
 
 The standalone macOS package demo is also available:
 
@@ -57,25 +59,19 @@ swift run --package-path Examples/CadenzaDemo CadenzaDemo
 
 ## Screenshots
 
-**Working macOS demo** — real playback, queue controls, and persistent bookmarks.
-
-![CadenzaDemo running on macOS with a track selected and playback controls](Documentation/Images/demo-mac.jpg)
-
-**Design concepts** — illustrative prototypes, not screenshots of shipped platform
-apps. The “Sonora” name is placeholder branding.
+Actual Xcode example apps using the Default layout and original demo media.
 
 <table>
-<tr><th>iPhone concept</th><th>iPad concept</th></tr>
+<tr><th>iPhone</th><th>iPad</th></tr>
 <tr>
-<td align="center"><img src="Documentation/Images/concept-iphone.jpg" height="260" alt="iPhone immersive-player design concept"></td>
-<td align="center"><img src="Documentation/Images/concept-ipad.jpg" height="260" alt="iPad collection design concept"></td>
+<td align="center"><img src="Documentation/Images/showcase-iphone.png" height="380" alt="CadenzaKit iPhone player with customizable transport controls"></td>
+<td align="center"><img src="Documentation/Images/showcase-ipad.png" height="380" alt="CadenzaKit iPad album grid and player"></td>
 </tr>
-<tr><th>Mac concept</th><th>Apple TV concept</th></tr>
+<tr><th>Native Mac</th><th>Apple TV</th></tr>
 <tr>
-<td><img src="Documentation/Images/concept-mac.jpg" width="440" alt="Mac library design concept"></td>
-<td><img src="Documentation/Images/concept-tv.jpg" width="440" alt="Apple TV listening-room design concept"></td>
+<td><img src="Documentation/Images/showcase-mac.png" width="480" alt="CadenzaKit native Mac library and player"></td>
+<td><img src="Documentation/Images/showcase-tv.png" width="480" alt="CadenzaKit Apple TV player with remote controls"></td>
 </tr>
 </table>
-
 The SDK and demos are under development. System playback integration is not implemented.
 [Detailed capabilities and limitations](Documentation/Integration.md)
