@@ -1,6 +1,6 @@
 # CadenzaKit integration guide
 
-[Overview and screenshots](../README.md) · [Run the macOS demo](../Examples/CadenzaDemo/README.md)
+[Overview and screenshots](../README.md) · [Run the Xcode example apps](../Examples/CadenzaShowcase/README.md)
 
 A modular Swift music SDK for iOS/iPadOS 17+, macOS 14+, and tvOS 17+.
 Swift 6 concurrency checking is enabled.

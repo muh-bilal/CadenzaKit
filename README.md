@@ -7,7 +7,7 @@ Compose local or HTTPS playback, queues, playlists, bookmarks, artwork, offline
 storage, and native equalization through independently selectable package products.
 Your app owns the UI; the SDK owns playback and service logic.
 
-[Integration guide](Documentation/Integration.md) · [Example app](Examples/CadenzaDemo)
+[Integration guide](Documentation/Integration.md) · [Xcode example apps](Examples/CadenzaShowcase)
 
 ## Usage
 
@@ -42,7 +42,11 @@ Pass an accessible local audio URL and retain the returned session. Your app dri
 [integration guide](Documentation/Integration.md) for feature flags, optional
 products, persistence, capability checks, and complete usage examples.
 
-Run the native macOS demo from this checkout:
+Open `Examples/CadenzaShowcase/CadenzaShowcase.xcodeproj` and select `CadenzaiOS`
+(iPhone/iPad), `CadenzamacOS`, or `CadenzatvOS`. Each app uses this checkout's
+CadenzaKit package for playback, queue behavior and saved positions.
+
+The standalone macOS package demo is also available:
 
 ```sh
 swift run --package-path Examples/CadenzaDemo CadenzaDemo
@@ -70,6 +74,5 @@ apps. The “Sonora” name is placeholder branding.
 </tr>
 </table>
 
-The SDK and demo are under development. System playback integration and the full
-platform showcase apps are not implemented.
+The SDK and demos are under development. System playback integration is not implemented.
 [Detailed capabilities and limitations](Documentation/Integration.md)

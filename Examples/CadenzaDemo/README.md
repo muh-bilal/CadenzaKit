@@ -1,5 +1,9 @@
 # CadenzaDemo — macOS listening room
 
+For Xcode application targets on iPhone, iPad, macOS and Apple TV, open the
+[multiplatform showcase](../CadenzaShowcase). This directory retains the standalone
+macOS Swift Package executable and shared, tested demo model.
+
 A small native AppKit application consuming CadenzaKit through a local Swift
 package dependency. Requires macOS 14+ and the Swift 6 toolchain. No signing team,
 credentials, network service or third-party project generator is needed.

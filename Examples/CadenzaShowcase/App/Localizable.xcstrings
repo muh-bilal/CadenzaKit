@@ -1,0 +1,296 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Back 5 seconds" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 Sekunden zurück"
+          }
+        }
+      }
+    },
+    "Choose a track to start listening." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle einen Titel zum Anhören."
+          }
+        }
+      }
+    },
+    "Forward 5 seconds" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 Sekunden vor"
+          }
+        }
+      }
+    },
+    "Listening room" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hörraum"
+          }
+        }
+      }
+    },
+    "Next" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächster Titel"
+          }
+        }
+      }
+    },
+    "Operation cancelled." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorgang abgebrochen."
+          }
+        }
+      }
+    },
+    "Original demo audio · Local playback" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Originales Demo-Audio · Lokale Wiedergabe"
+          }
+        }
+      }
+    },
+    "Original sounds · Made for this demo" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Originalklänge · Für diese Demo erstellt"
+          }
+        }
+      }
+    },
+    "Pause" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause"
+          }
+        }
+      }
+    },
+    "Play" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wiedergabe"
+          }
+        }
+      }
+    },
+    "Playback position" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wiedergabeposition"
+          }
+        }
+      }
+    },
+    "Playing" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wiedergabe läuft"
+          }
+        }
+      }
+    },
+    "Position saved. It will be here next time." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Position gespeichert. Sie ist beim nächsten Mal verfügbar."
+          }
+        }
+      }
+    },
+    "Powered by CadenzaKit" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit CadenzaKit"
+          }
+        }
+      }
+    },
+    "Preparing original demo audio…" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demo-Audio wird vorbereitet …"
+          }
+        }
+      }
+    },
+    "Previous" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorheriger Titel"
+          }
+        }
+      }
+    },
+    "Ready to listen" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereit zum Hören"
+          }
+        }
+      }
+    },
+    "Repeat all" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle wiederholen"
+          }
+        }
+      }
+    },
+    "Repeat off" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wiederholen aus"
+          }
+        }
+      }
+    },
+    "Repeat one" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einen wiederholen"
+          }
+        }
+      }
+    },
+    "Resume saved" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gespeicherte Position fortsetzen"
+          }
+        }
+      }
+    },
+    "Save position" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Position speichern"
+          }
+        }
+      }
+    },
+    "Shuffle off" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zufallswiedergabe aus"
+          }
+        }
+      }
+    },
+    "Shuffle on" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zufallswiedergabe an"
+          }
+        }
+      }
+    },
+    "Stop" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stopp"
+          }
+        }
+      }
+    },
+    "Unable to open demo" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demo kann nicht geöffnet werden"
+          }
+        }
+      }
+    },
+    "Your listening room is ready." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Hörraum ist bereit."
+          }
+        }
+      }
+    },
+    "Your next quiet moment" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein nächster ruhiger Moment"
+          }
+        }
+      }
+    },
+    "Your saved position is ready to resume." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine gespeicherte Position kann fortgesetzt werden."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
