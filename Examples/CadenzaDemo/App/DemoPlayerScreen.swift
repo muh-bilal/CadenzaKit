@@ -165,17 +165,28 @@ struct DemoPlayerScreen: View {
         }
     }
     private var chrome: some View {
-        HStack(spacing: 16) {
-            Text("CadenzaKit").font(.caption.weight(.semibold))
-            Spacer()
-            Button(demoText("Default")) { empty = false }.accessibilityIdentifier("layout-default")
-            Button(demoText("Empty")) { empty = true }.accessibilityIdentifier("layout-empty")
-            Button { panel = .options } label: { Label(demoText("Customize"), systemImage: "slider.horizontal.3") }
-                .accessibilityLabel(demoText("Customize")).accessibilityIdentifier("customize")
-        }.font(.caption).demoButtonStyle().padding(.horizontal, 24).padding(.vertical, 8)
+        ViewThatFits(in: .horizontal) {
+            chromeRow(compact: false)
+            chromeRow(compact: true)
+        }
+        .font(.caption).demoButtonStyle().padding(.horizontal, 16).padding(.vertical, 8)
         #if os(tvOS)
         .tint(colors.controlBackground)
         #endif
+    }
+
+    private func chromeRow(compact: Bool) -> some View {
+        HStack(spacing: 12) {
+            if !compact { Text("CadenzaKit").font(.caption.weight(.semibold)) }
+            Spacer(minLength: 0)
+            Button(demoText("Default")) { empty = false }.accessibilityIdentifier("layout-default")
+            Button(demoText("Empty")) { empty = true }.accessibilityIdentifier("layout-empty")
+            Button { panel = .options } label: {
+                if compact { Image(systemName: "slider.horizontal.3").frame(minWidth: 28, minHeight: 28) }
+                else { Label(demoText("Customize"), systemImage: "slider.horizontal.3") }
+            }
+            .accessibilityLabel(demoText("Customize")).accessibilityIdentifier("customize")
+        }.fixedSize(horizontal: true, vertical: false).frame(maxWidth: .infinity, alignment: .trailing)
     }
 
     private func desktop(width: CGFloat) -> some View {
@@ -303,10 +314,42 @@ struct DemoPlayerScreen: View {
     private var sound: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text(demoText("Native AVAudioEngine equalizer · CadenzaKit capability checks")).font(.subheadline)
-            Button(demoText("Warm bass")) { Task { await player.setSound(bass: true) } }.accessibilityIdentifier("warm-bass")
-            Button(demoText("Bypass")) { Task { await player.setSound(bass: false) } }.accessibilityIdentifier("bypass")
+            HStack {
+                Button(demoText("Warm bass")) { Task { await player.setSound(bass: true) } }.accessibilityIdentifier("warm-bass")
+                Button(demoText("Bypass")) { Task { await player.setSound(bass: false) } }.accessibilityIdentifier("bypass")
+            }.frame(maxWidth: .infinity, alignment: .leading)
+            #if os(tvOS)
+            .focusSection()
+            #endif
+            Text(demoText(player.soundSettings.isBypassed ? "Equalizer bypassed" : "Equalizer enabled"))
+                .font(.headline).accessibilityIdentifier("sound-state")
+            soundControl("Preamp", frequency: nil)
+            ForEach([Float(120), 1000, 8000], id: \.self) { frequency in
+                soundControl("\(Int(frequency)) Hz", frequency: frequency)
+            }
+            Text(demoText("Adjustments enable the equalizer. Reduce preamp when boosting bands to avoid clipping."))
+                .font(.caption).foregroundStyle(.secondary)
             Text(player.soundMessage).accessibilityIdentifier("sound-status")
-        }.demoButtonStyle()
+        }.demoButtonStyle().disabled(player.soundBusy)
+    }
+
+    private func soundControl(_ title: String, frequency: Float?) -> some View {
+        let gain = frequency.map { frequency in player.soundSettings.bands.first { $0.frequency == frequency }?.gain ?? 0 } ?? player.soundSettings.preamp
+        let identifier = frequency.map { "eq-\(Int($0))" } ?? "eq-preamp"
+        return HStack {
+            Text(demoText(title)).frame(maxWidth: .infinity, alignment: .leading)
+            Button { Task { await player.adjustSound(frequency: frequency, delta: -1) } } label: { Image(systemName: "minus").frame(minWidth: 28, minHeight: 28) }
+                .disabled(gain <= -24).accessibilityLabel("\(demoText("Decrease")) \(demoText(title))")
+                .accessibilityIdentifier(identifier + "-decrease")
+            Text("\(Int(gain)) dB").monospacedDigit().frame(minWidth: 64)
+                .accessibilityIdentifier(identifier + "-value")
+            Button { Task { await player.adjustSound(frequency: frequency, delta: 1) } } label: { Image(systemName: "plus").frame(minWidth: 28, minHeight: 28) }
+                .disabled(gain >= 24).accessibilityLabel("\(demoText("Increase")) \(demoText(title))")
+                .accessibilityIdentifier(identifier + "-increase")
+        }
+        #if os(tvOS)
+        .focusSection()
+        #endif
     }
 }
 

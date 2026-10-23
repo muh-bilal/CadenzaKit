@@ -44,3 +44,8 @@
 "System" = "System";
 "Light" = "Hell";
 "Dark" = "Dunkel";
+"Equalizer enabled" = "Equalizer aktiviert";
+"Preamp" = "Vorverstärkung";
+"Decrease" = "Verringern";
+"Increase" = "Erhöhen";
+"Adjustments enable the equalizer. Reduce preamp when boosting bands to avoid clipping." = "Änderungen aktivieren den Equalizer. Bei verstärkten Bändern die Vorverstärkung reduzieren, um Übersteuerung zu vermeiden.";

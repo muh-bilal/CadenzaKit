@@ -139,7 +139,7 @@ final class ShowcaseTests: XCTestCase {
     }
 
     @MainActor func waitLabel(_ label: String, on element: XCUIElement) {
-        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", label), object: element)], timeout: 10), .completed)
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@ OR value == %@", label, label), object: element)], timeout: 10), .completed)
     }
 
     @MainActor func testPlaybackQueueModesAndDurableResume() {
@@ -182,6 +182,38 @@ final class ShowcaseTests: XCTestCase {
         assertTitle("After the light", in: app)
         activate(app.buttons["queue"])
         activate(app.buttons["stop"])
+    }
+
+    @MainActor func testEqualizerControlsAndCompactToolbar() {
+        let app = application()
+        app.launch()
+        let customize = app.buttons["customize"]
+        XCTAssertTrue(customize.waitForExistence(timeout: 10))
+        #if os(iOS)
+        XCTAssertLessThan(customize.frame.height, 60, "Toolbar labels must not wrap into a tall pill")
+        #endif
+        let toolbar = XCTAttachment(screenshot: app.screenshot())
+        toolbar.name = "Demo toolbar"; toolbar.lifetime = .keepAlways; add(toolbar)
+        activate(app.buttons["equalizer"])
+        waitLabel("Equalizer bypassed", on: app.staticTexts["sound-state"])
+        activate(app.buttons["warm-bass"])
+        waitLabel("Equalizer enabled", on: app.staticTexts["sound-state"])
+        waitLabel("4 dB", on: app.staticTexts["eq-120-value"])
+        activate(app.buttons["eq-120-increase"])
+        waitLabel("5 dB", on: app.staticTexts["eq-120-value"])
+        activate(app.buttons["eq-preamp-decrease"])
+        waitLabel("-5 dB", on: app.staticTexts["eq-preamp-value"])
+        activate(app.buttons["eq-120-decrease"])
+        waitLabel("4 dB", on: app.staticTexts["eq-120-value"])
+        activate(app.buttons["eq-preamp-increase"])
+        waitLabel("-4 dB", on: app.staticTexts["eq-preamp-value"])
+        let equalizer = XCTAttachment(screenshot: app.screenshot())
+        equalizer.name = "Equalizer controls"; equalizer.lifetime = .keepAlways; add(equalizer)
+        activate(app.buttons["bypass"])
+        waitLabel("Equalizer bypassed", on: app.staticTexts["sound-state"])
+        dismissPanel(in: app)
+        activate(app.buttons["equalizer"])
+        waitLabel("4 dB", on: app.staticTexts["eq-120-value"])
     }
 
     @MainActor func testLayoutCustomizationAndEqualizer() {
@@ -231,9 +263,9 @@ final class ShowcaseTests: XCTestCase {
         waitLabel("Play", on: app.buttons["playPause"])
         activate(app.buttons["equalizer"])
         activate(app.buttons["warm-bass"])
-        XCTAssertTrue(app.staticTexts["Warm bass enabled"].waitForExistence(timeout: 5))
+        waitLabel("Equalizer enabled", on: app.staticTexts["sound-state"])
         activate(app.buttons["bypass"])
-        XCTAssertTrue(app.staticTexts["Equalizer bypassed"].waitForExistence(timeout: 5))
+        waitLabel("Equalizer bypassed", on: app.staticTexts["sound-state"])
         activate(app.buttons["done"])
         app.terminate()
     }

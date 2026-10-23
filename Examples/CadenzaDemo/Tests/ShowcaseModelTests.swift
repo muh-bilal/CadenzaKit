@@ -46,6 +46,27 @@ import CadenzaKit
         backend.fail = false; await controller.setSound(bass: true)
         XCTAssertEqual(backend.equalizerSettings.bands.first?.gain, 4)
         await controller.setSound(bass: false); XCTAssertTrue(backend.equalizerSettings.isBypassed)
+        XCTAssertEqual(controller.soundSettings, backend.equalizerSettings)
+        await controller.adjustSound(frequency: 1000, delta: 3)
+        XCTAssertFalse(controller.soundSettings.isBypassed)
+        XCTAssertEqual(controller.soundSettings.bands.first { $0.frequency == 1000 }?.gain, 3)
+        await controller.adjustSound(frequency: 1000, delta: 100)
+        XCTAssertEqual(controller.soundSettings.bands.first { $0.frequency == 1000 }?.gain, 24)
+        await controller.adjustSound(frequency: nil, delta: -100)
+        XCTAssertEqual(controller.soundSettings.preamp, -24)
+        let beforeFailure = controller.soundSettings
+        backend.fail = true
+        await controller.adjustSound(frequency: 120, delta: -1)
+        XCTAssertEqual(controller.soundSettings, beforeFailure)
+        XCTAssertFalse(controller.soundBusy)
+        backend.fail = false
+        let cancellation = Task { @MainActor in
+            withUnsafeCurrentTask { $0?.cancel() }
+            await controller.adjustSound(frequency: nil, delta: 1)
+        }
+        await cancellation.value
+        XCTAssertEqual(controller.soundSettings, beforeFailure)
+        XCTAssertFalse(controller.soundBusy)
         controller.send(.select(0)); controller.send(.next)
         let cancelled = controller.action
         controller.stop()

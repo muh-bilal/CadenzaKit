@@ -25,6 +25,8 @@ final class Showcase: ObservableObject {
     @Published private(set) var revision = 0
     @Published private(set) var busy = false
     @Published private(set) var soundMessage = ""
+    @Published private(set) var soundSettings = EqualizerSettings()
+    @Published private(set) var soundBusy = false
     private var equalizer: EqualizerService?
     private(set) var action: Task<Void, Never>?
     struct Services { let model: DemoModel; let equalizer: EqualizerService }
@@ -38,6 +40,7 @@ final class Showcase: ObservableObject {
             let services = try makeServices()
             let model = services.model
             equalizer = services.equalizer
+            soundSettings = try services.equalizer.settings
             model.didChange = { [weak self] in self?.revision += 1 }
             self.model = model
             await model.restore()
@@ -77,11 +80,35 @@ final class Showcase: ObservableObject {
     }
 
     func setSound(bass: Bool) async {
-        guard let equalizer else { return }
+        await updateSound { service in
+            if bass {
+                try await service.apply(EqualizerSettings(bands: [EqualizerBand(frequency: 120, gain: 4)], preamp: -4))
+            } else { try service.bypass() }
+        }
+    }
+
+    func adjustSound(frequency: Float?, delta: Float) async {
+        await updateSound { service in
+            let current = try service.settings
+            var bands = current.bands
+            var preamp = current.preamp
+            if let frequency {
+                let gain = bands.first { $0.frequency == frequency }?.gain ?? 0
+                bands.removeAll { $0.frequency == frequency }
+                bands.append(try EqualizerBand(frequency: frequency, gain: min(24, max(-24, gain + delta))))
+            } else { preamp = min(24, max(-24, preamp + delta)) }
+            try await service.apply(EqualizerSettings(bands: bands, preamp: preamp))
+        }
+    }
+
+    private func updateSound(_ operation: (EqualizerService) async throws -> Void) async {
+        guard !soundBusy, let equalizer else { return }
+        soundBusy = true
+        defer { soundBusy = false }
         do {
-            let settings = bass ? try EqualizerSettings(bands: [EqualizerBand(frequency: 120, gain: 4)], preamp: -4) : EqualizerSettings()
-            if bass { try await equalizer.apply(settings) } else { try equalizer.bypass() }
-            soundMessage = demoText(bass ? "Warm bass enabled" : "Equalizer bypassed")
+            try await operation(equalizer)
+            soundSettings = try equalizer.settings
+            soundMessage = demoText(soundSettings.isBypassed ? "Equalizer bypassed" : "Equalizer enabled")
         } catch { soundMessage = String(describing: error) }
     }
 

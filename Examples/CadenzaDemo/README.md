@@ -55,8 +55,10 @@ section or the whole layout through `PlayerComponents`, and configure fonts,
 colors, dimensions, image/text resolvers and actions through `PlayerContext`.
 See the [SwiftUI integration guide](../../Documentation/SwiftUI.md).
 
-**Equalizer** applies a real warm-bass setting through `EqualizerService`, or
-bypasses DSP. Capability enforcement and playback state remain in CadenzaKit.
+**Equalizer** opens an editor with live enabled/bypassed state, a warm-bass preset,
+preamp and 120 Hz / 1 kHz / 8 kHz gain controls. Every adjustment goes through
+`EqualizerService`; bypass preserves the current gains. Reduce preamp when
+boosting bands to avoid clipping. Settings remain active when the panel closes. Capability enforcement and playback state remain in CadenzaKit.
 The example does not claim the concept artwork's fictional music, lyrics,
 output routes or high-resolution audio metadata are implemented services.
 

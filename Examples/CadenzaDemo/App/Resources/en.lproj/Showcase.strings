@@ -44,3 +44,8 @@
 "System" = "System";
 "Light" = "Light";
 "Dark" = "Dark";
+"Equalizer enabled" = "Equalizer enabled";
+"Preamp" = "Preamp";
+"Decrease" = "Decrease";
+"Increase" = "Increase";
+"Adjustments enable the equalizer. Reduce preamp when boosting bands to avoid clipping." = "Adjustments enable the equalizer. Reduce preamp when boosting bands to avoid clipping.";
