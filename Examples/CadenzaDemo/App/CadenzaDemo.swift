@@ -35,8 +35,6 @@ final class Showcase: ObservableObject {
     private let makeServices: @MainActor () throws -> Services
     init(makeServices: @escaping @MainActor () throws -> Services = Showcase.liveServices) { self.makeServices = makeServices }
     private var generation = 0
-    private var polling: Task<Void, Never>?
-    deinit { polling?.cancel() }
 
     func start() async {
         guard model == nil else { return }
@@ -48,12 +46,6 @@ final class Showcase: ObservableObject {
             model.didChange = { [weak self] in self?.revision += 1 }
             self.model = model
             await model.restore()
-            polling = Task { [weak self] in
-                while !Task.isCancelled {
-                    do { try await Task.sleep(for: .milliseconds(250)) } catch { break }
-                    if let self, !self.busy { await self.model?.refresh() }
-                }
-            }
         } catch { failure = String(describing: error) }
     }
 

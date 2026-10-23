@@ -19,7 +19,8 @@ select your development team in Signing & Capabilities. No team ID is checked in
 `App/CadenzaDemo.swift` handles app lifecycle and service composition.
 The project compiles `App/DemoModel.swift` for all three platform targets:
 
-- `Cadenza` configures the source provider and creates SDK services.
+- `CadenzaPlayer` connects the source/backend and automatically drives progress;
+  its `services` facade creates the other SDK services.
 - `LocalFileSource` resolves demo tracks; `AVAudioEngineBackend` plays them and supplies native equalizer DSP.
 - `PlaybackQueue` owns transport state, seeking, EOF advancement, history, shuffle
   and repeat. The UI reads its snapshot directly.
@@ -31,7 +32,7 @@ The project compiles `App/DemoModel.swift` for all three platform targets:
 Choose a track, seek forward, save its position, close and reopen the app, then
 select **Resume saved**. The apps opt in to `FeatureFlags(systemPlayback: true)` and inject
 `AppleSystemPlaybackController`. iOS/iPadOS/tvOS declare `UIBackgroundModes/audio`;
-macOS retains its player when hidden or minimized. The app-owned refresh task keeps
+macOS retains its player when hidden or minimized. The SDK-owned refresh task keeps
 queue transitions and progress running independently of the view lifecycle.
 Set `systemPlayback: false` in the composition root to pause when backgrounded;
 returning to the app does not automatically resume. UI tests exercise both settings

@@ -15,33 +15,23 @@ and full component/layout replacement without coupling UI to playback services.
 ## Usage
 
 Add `https://github.com/muh-bilal/CadenzaKit` in Xcode's **Add Package Dependencies**
-using the `main` branch. For local playback, select `CadenzaKit`, `CadenzaDomain`,
-`CadenzaLocalSources`, and `CadenzaAVPlayback`. Requires Swift 6.
+using the `main` branch. For the simplest integration, select `CadenzaPlayer` and `CadenzaDomain`. Requires Swift 6.
 
 ```swift
-import Foundation
 import CadenzaDomain
-import CadenzaKit
-import CadenzaLocalSources
-import CadenzaAVPlayback
+import CadenzaPlayer
 
-@MainActor
-func playFile(_ url: URL) async throws -> PlaybackSession {
-    let media = MediaResource(id: try MediaID("track"), url: url, title: "My track")
-    let source = try LocalFileSource(resources: [media.id: media])
-    let kit = try Cadenza(
-        configuration: .init(defaultProvider: source.identifier),
-        providers: [source]
-    )
-    let player = kit.makeSession(backend: AVPlayerBackend())
-    try await player.load(media.id)
-    try await player.play()
-    return player
+// Run on MainActor and retain at app scope. fileURL is an accessible audio URL.
+let source = MediaSource { id in
+    MediaResource(id: id, url: fileURL, title: "My track")
 }
+let player = try CadenzaPlayer(source: source)
+try await player.play(MediaID("track"))
+// Progress and queue advancement are automatic; UI is optional.
 ```
 
-Pass an accessible local audio URL and retain the returned session. Your app drives
-`refresh()` for progress/EOF and calls `stop()` when finished. See the
+The facade updates progress and advances the queue automatically. Call `stop()`
+when finished; lower-level services remain available for custom orchestration. See the
 [integration guide](Documentation/Integration.md) for feature flags, optional
 products, persistence, capability checks, and complete usage examples.
 

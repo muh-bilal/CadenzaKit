@@ -2,6 +2,7 @@ import Foundation
 import AVFoundation
 import CadenzaDomain
 import CadenzaKit
+import CadenzaPlayer
 import CadenzaLocalSources
 import CadenzaPersistence
 
@@ -12,6 +13,7 @@ public final class DemoModel {
         case select(Int), playPause, stop, next, previous, seek(Double), shuffle, repeatMode, saveBookmark, resumeBookmark
     }
     public let tracks: [MediaResource]
+    public let player: CadenzaPlayer
     public let queue: PlaybackQueue
     public let cadenza: Cadenza
     public private(set) var saved: PositionBookmark?
@@ -23,11 +25,16 @@ public final class DemoModel {
         guard Set(tracks.map(\.id)).count == tracks.count else { throw CadenzaError.resourceIdentityMismatch }
         self.tracks = tracks
         let source = try LocalFileSource(resources: Dictionary(uniqueKeysWithValues: tracks.map { ($0.id, $0) }))
-        let kit = try Cadenza(configuration: .init(defaultProvider: source.identifier, features: features), providers: [source])
-        cadenza = kit
-        queue = kit.makeQueue(backend: backend, systemPlayback: systemPlayback)
-        bookmarks = kit.makeBookmarks(store: store)
+        player = try CadenzaPlayer(source: source, features: features, backend: backend, systemPlayback: systemPlayback)
+        cadenza = player.services
+        queue = player.queue
+        bookmarks = cadenza.makeBookmarks(store: store)
         for track in tracks { try queue.insert(.init(id: UUID(), mediaID: track.id), at: queue.entries.count) }
+        player.onChange = { [weak self] in
+            guard let self else { return }
+            if let failure = self.player.failure { self.message = "Playback stopped: \(failure)" }
+            self.didChange?()
+        }
     }
 
     public func restore() async {
@@ -65,14 +72,7 @@ public final class DemoModel {
         didChange?()
     }
 
-    public func refresh() async {
-        // Never poll an unloaded/failed backend. A failed refresh is visible and
-        // stops the transport so the next tick cannot hide the failure message.
-        guard queue.snapshot.resource != nil, queue.snapshot.state != .idle else { return }
-        do { try await queue.refresh() }
-        catch { queue.stop(); message = "Playback stopped: \(error)" }
-        didChange?()
-    }
+    public func refresh() async { await player.refresh() }
 
     private static let bookmarkID = UUID(uuidString: "CADECACE-0000-4000-8000-000000000001")!
 }

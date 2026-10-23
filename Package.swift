@@ -6,6 +6,7 @@ let package = Package(
     defaultLocalization: "en",
     platforms: [.iOS(.v17), .macOS(.v14), .tvOS(.v17)],
     products: [
+        .library(name: "CadenzaPlayer", targets: ["CadenzaPlayer"]),
         .library(name: "CadenzaDomain", targets: ["CadenzaDomain"]),
         .library(name: "CadenzaKit", targets: ["CadenzaKit"]),
         .library(name: "CadenzaTesting", targets: ["CadenzaTesting"]),
@@ -21,6 +22,7 @@ let package = Package(
         .library(name: "CadenzaPresentation", targets: ["CadenzaPresentation"])
     ],
     targets: [
+        .target(name: "CadenzaPlayer", dependencies: ["CadenzaKit", "CadenzaDomain", "CadenzaAVPlayback", "CadenzaSystemPlayback"]),
         .target(name: "CadenzaDomain"),
         .target(name: "CadenzaKit", dependencies: ["CadenzaDomain"]),
         .target(name: "CadenzaTesting", dependencies: ["CadenzaDomain"]),
@@ -35,6 +37,6 @@ let package = Package(
         .target(name: "CadenzaPresentation", dependencies: ["CadenzaDomain"]),
         .target(name: "CadenzaSwiftUI", dependencies: ["CadenzaDomain", "CadenzaPresentation"], resources: [.process("Resources")]),
         .testTarget(name: "CadenzaSwiftUITests", dependencies: ["CadenzaSwiftUI", "CadenzaDomain"]),
-        .testTarget(name: "CadenzaKitTests", dependencies: ["CadenzaSystemPlayback", "CadenzaKit", "CadenzaTesting", "CadenzaLocalSources", "CadenzaAVPlayback", "CadenzaPersistence", "CadenzaArtwork", "CadenzaRemoteSources", "CadenzaDownloads", "CadenzaAudioEngine"])
+        .testTarget(name: "CadenzaKitTests", dependencies: ["CadenzaPlayer", "CadenzaSystemPlayback", "CadenzaKit", "CadenzaTesting", "CadenzaLocalSources", "CadenzaAVPlayback", "CadenzaPersistence", "CadenzaArtwork", "CadenzaRemoteSources", "CadenzaDownloads", "CadenzaAudioEngine"])
     ]
 )

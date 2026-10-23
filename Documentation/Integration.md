@@ -57,6 +57,42 @@ is revoked so the host can always halt playback. Runtime snapshots are policy,
 not physical route discovery. The optional system playback adapter configures the
 audio session; hosts still supply route-specific policy.
 
+## Simple player facade
+
+Select `CadenzaPlayer` for the optional Apple composition layer. Supply a
+`SourceProvider` or a `MediaSource` async resolver, then call `play(_:)` or
+`play(entries:startingAt:)`. It configures AVPlayer by default, automatically
+samples progress and advances the queue. Set `remotePlayback: true` for HTTPS
+and `systemPlayback: true` for background audio. The host's background-mode
+configuration and lifecycle forwarding described below remain required.
+
+```swift
+import CadenzaDomain
+import CadenzaPlayer
+
+let source = MediaSource { id in
+    // Resolve a currently valid playable URL using your own catalog/auth logic.
+    try await myCatalog.resolve(id)
+}
+let player = try CadenzaPlayer(source: source,
+    features: .init(remotePlayback: true, systemPlayback: true))
+player.onChange = { /* Read player.snapshot and player.failure. */ }
+try await player.play(MediaID("track-42"))
+```
+
+Retain the player at app scope. `pause`, `resume`, `seek`, `next`, `previous`, and
+`stop` delegate to the existing services; async command failures are thrown.
+Automatic refresh failures are exposed through `failure` and stop playback.
+`onChange` runs on MainActor; avoid capturing the player strongly in its callback.
+`queue` exposes advanced operations; `services` creates bookmarks, playlists,
+equalizer and other services. Inject a backend, system controller, clock, and
+runtime capability resolver when needed. Additional providers can be registered
+and selected by queue entry. The demo injects AVAudioEngine for equalizer support.
+
+The lower-level products remain usable without the facade or its polling task.
+Catalog browsing, authentication, DRM licensing and unsupported codecs are not
+inferred from a URL. Live/indefinite media is not yet supported.
+
 ## Local playback
 
 ```swift

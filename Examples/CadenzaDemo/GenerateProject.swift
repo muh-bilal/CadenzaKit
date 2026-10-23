@@ -57,7 +57,7 @@ for (platform, sdk, supported, family, deployment, version) in [
     if platform != "macOS" { settings["INFOPLIST_FILE"] = "App/BackgroundAudio.plist" }
     let product = add(["isa": "PBXFileReference", "path": "\(name).app", "explicitFileType": "wrapper.application", "sourceTree": "BUILT_PRODUCTS_DIR"])
     output.append(product)
-    let dependencies = ["CadenzaSystemPlayback", "CadenzaKit", "CadenzaDomain", "CadenzaLocalSources", "CadenzaAudioEngine", "CadenzaSwiftUI", "CadenzaPersistence"].map {
+    let dependencies = ["CadenzaPlayer", "CadenzaSystemPlayback", "CadenzaKit", "CadenzaDomain", "CadenzaLocalSources", "CadenzaAudioEngine", "CadenzaSwiftUI", "CadenzaPersistence"].map {
         add(["isa": "XCSwiftPackageProductDependency", "package": package, "productName": $0])
     }
     let frameworks = add(["isa": "PBXFrameworksBuildPhase", "buildActionMask": 2147483647, "files": dependencies.map { add(["isa": "PBXBuildFile", "productRef": $0]) }, "runOnlyForDeploymentPostprocessing": 0])
