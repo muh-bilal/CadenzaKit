@@ -79,7 +79,7 @@ struct CapabilityTests {
             func resolve(_ id: MediaID) async throws -> MediaResource { throw CadenzaError.invalidIdentifier }
         }
         #expect(Provider().supportedFeatures == [.sourceResolution])
-        #expect(Feature.allCases == [.sourceResolution, .playback, .seeking, .remotePlayback, .downloads, .equalizer])
+        #expect(Feature.allCases == [.sourceResolution, .playback, .seeking, .remotePlayback, .downloads, .equalizer, .systemPlayback])
         #expect(Feature.sourceResolution.rawValue == "sourceResolution")
     }
 }

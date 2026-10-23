@@ -4,13 +4,15 @@ import CadenzaDomain
 import CadenzaKit
 import CadenzaAudioEngine
 import CadenzaPersistence
+import CadenzaSystemPlayback
 
 func demoText(_ key: String) -> String { NSLocalizedString(key, tableName: "Showcase", comment: "") }
 
 @main
 struct CadenzaDemo: App {
+    @StateObject private var player = Showcase()
     var body: some Scene {
-        WindowGroup("CadenzaKit") { ShowcaseView() }
+        WindowGroup("CadenzaKit") { ShowcaseView(player: player) }
         #if os(macOS)
         .defaultSize(width: 1200, height: 820)
         #endif
@@ -33,6 +35,8 @@ final class Showcase: ObservableObject {
     private let makeServices: @MainActor () throws -> Services
     init(makeServices: @escaping @MainActor () throws -> Services = Showcase.liveServices) { self.makeServices = makeServices }
     private var generation = 0
+    private var polling: Task<Void, Never>?
+    deinit { polling?.cancel() }
 
     func start() async {
         guard model == nil else { return }
@@ -44,6 +48,12 @@ final class Showcase: ObservableObject {
             model.didChange = { [weak self] in self?.revision += 1 }
             self.model = model
             await model.restore()
+            polling = Task { [weak self] in
+                while !Task.isCancelled {
+                    do { try await Task.sleep(for: .milliseconds(250)) } catch { break }
+                    if let self, !self.busy { await self.model?.refresh() }
+                }
+            }
         } catch { failure = String(describing: error) }
     }
 
@@ -59,12 +69,8 @@ final class Showcase: ObservableObject {
             let support = try fm.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true).appendingPathComponent("CadenzaShowcase/bookmarks.json")
             store = try AtomicFileStore(fileURL: support)
             #endif
-            #if !os(macOS)
-            try AVAudioSession.sharedInstance().setCategory(.playback)
-            try AVAudioSession.sharedInstance().setActive(true)
-            #endif
             let engine = AVAudioEngineBackend()
-            let model = try DemoModel(tracks: tracks, backend: engine, store: store, features: .init(equalizer: true))
+            let model = try DemoModel(tracks: tracks, backend: engine, store: store, features: .init(systemPlayback: ProcessInfo.processInfo.environment["CADENZA_SYSTEM_PLAYBACK"] != "0", equalizer: true), systemPlayback: AppleSystemPlaybackController())
             let equalizer = model.cadenza.makeEqualizer(backend: engine, store: try PreferencesDocumentStore(suiteName: "org.cadenzakit.showcase.equalizer", key: "presets"))
             return Services(model: model, equalizer: equalizer)
     }
@@ -112,6 +118,11 @@ final class Showcase: ObservableObject {
         } catch { soundMessage = String(describing: error) }
     }
 
+    func setBackgrounded(_ value: Bool) {
+        model?.queue.setBackgrounded(value)
+        revision += 1
+    }
+
     func stop() {
         generation += 1; action?.cancel(); action = nil
         model?.queue.stop(); busy = false; revision += 1
@@ -119,7 +130,7 @@ final class Showcase: ObservableObject {
 }
 
 struct ShowcaseView: View {
-    @StateObject private var player = Showcase()
+    @ObservedObject var player: Showcase
     @Environment(\.scenePhase) private var phase
     var body: some View {
         Group {
@@ -128,14 +139,19 @@ struct ShowcaseView: View {
                 ContentUnavailableView("Unable to open demo", systemImage: "exclamationmark.triangle", description: Text(failure))
             } else { ProgressView("Preparing original demo audio…") }
         }
-        .task {
-            await player.start()
-            while !Task.isCancelled {
-                do { try await Task.sleep(for: .milliseconds(250)) } catch { break }
-                if !player.busy { await player.model?.refresh() }
-            }
-        }
-        .onChange(of: phase) { _, phase in if phase == .background { player.stop() } }
-        .onDisappear { player.stop() }
+        .task { await player.start() }
+        #if os(macOS)
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didHideNotification)) { _ in player.setBackgrounded(true) }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didUnhideNotification)) { _ in updateWindowVisibility() }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didMiniaturizeNotification)) { _ in updateWindowVisibility() }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didDeminiaturizeNotification)) { _ in updateWindowVisibility() }
+        #else
+        .onChange(of: phase) { _, phase in player.setBackgrounded(phase == .background) }
+        #endif
     }
+    #if os(macOS)
+    private func updateWindowVisibility() {
+        player.setBackgrounded(NSApp.isHidden || NSApp.windows.filter { $0.canBecomeMain }.allSatisfy { $0.isMiniaturized || !$0.isVisible })
+    }
+    #endif
 }

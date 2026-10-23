@@ -47,6 +47,51 @@ final class ShowcaseTests: XCTestCase {
         app.terminate()
     }
 
+    @MainActor func testBackgroundPlaybackEnabledAndDisabled() {
+        for enabled in [true, false] {
+            let app = application()
+            app.launchEnvironment["CADENZA_SYSTEM_PLAYBACK"] = enabled ? "1" : "0"
+            app.launch()
+            activate(app.buttons["queue"])
+            activate(app.buttons["queue-track-0"])
+            waitLabel("Pause", on: app.buttons["playPause"])
+            // Tracks last 24 seconds. Return after EOF and require measurable
+            // progress in track 2, proving it started while the app was hidden.
+            #if os(macOS)
+            app.typeKey("h", modifierFlags: .command)
+            #elseif os(tvOS)
+            XCUIRemote.shared.press(.home)
+            #else
+            XCUIDevice.shared.press(.home)
+            #endif
+            let elapsed = expectation(description: "Background audio interval")
+            DispatchQueue.main.asyncAfter(deadline: .now() + (enabled ? 30 : 4)) { elapsed.fulfill() }
+            XCTAssertEqual(XCTWaiter.wait(for: [elapsed], timeout: 35), .completed)
+            app.activate()
+            waitLabel(enabled ? "Pause" : "Play", on: app.buttons["playPause"])
+            assertTitle(enabled ? "Soft geometry" : "After the light", in: app)
+            let timer = app.staticTexts["elapsed-time"]
+            #if os(macOS)
+            let initial = timer.value as? String ?? timer.label
+            let key = "value"
+            #else
+            let initial = timer.label
+            let key = "label"
+            #endif
+            if enabled {
+                let seconds = initial.split(separator: ":").compactMap { Int($0) }
+                XCTAssertEqual(seconds.count, 2)
+                XCTAssertGreaterThanOrEqual(seconds[0] * 60 + seconds[1], 4, "Track 2 must have advanced before foregrounding")
+                let advancing = XCTNSPredicateExpectation(predicate: NSPredicate(format: "%K != %@", key, initial), object: timer)
+                XCTAssertEqual(XCTWaiter.wait(for: [advancing], timeout: 4), .completed)
+            } else {
+                activate(app.buttons["playPause"])
+                waitLabel("Pause", on: app.buttons["playPause"])
+            }
+            app.terminate()
+        }
+    }
+
     override func setUpWithError() throws { continueAfterFailure = false }
     @MainActor func application(language: String = "en") -> XCUIApplication {
         let app = XCUIApplication()
@@ -270,6 +315,25 @@ final class ShowcaseTests: XCTestCase {
         app.terminate()
     }
     #if os(macOS)
+    @MainActor func testMinimizedPlaybackRespectsFeatureFlag() {
+        for enabled in [true, false] {
+            let app = application()
+            app.launchEnvironment["CADENZA_SYSTEM_PLAYBACK"] = enabled ? "1" : "0"
+            app.launch()
+            activate(app.buttons["playPause"])
+            waitLabel("Pause", on: app.buttons["playPause"])
+            app.typeKey("m", modifierFlags: .command)
+            let interval = expectation(description: "Minimized playback")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4) { interval.fulfill() }
+            XCTAssertEqual(XCTWaiter.wait(for: [interval], timeout: 8), .completed)
+            app.activate()
+            activate(app.menuBars.menuBarItems["Window"])
+            activate(app.menuBars.menuItems["CadenzaKit"])
+            waitLabel(enabled ? "Pause" : "Play", on: app.buttons["playPause"])
+            app.terminate()
+        }
+    }
+
     @MainActor func testLibraryNavigationAndSearch() {
         let app = application(); app.launch()
         activate(app.buttons["library"])

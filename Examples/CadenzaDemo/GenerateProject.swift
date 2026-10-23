@@ -54,9 +54,10 @@ for (platform, sdk, supported, family, deployment, version) in [
         settings["INFOPLIST_KEY_UIApplicationSceneManifest_Generation"] = "YES"
     }
     if platform == "macOS" { settings["ENABLE_APP_SANDBOX"] = "YES" }
+    if platform != "macOS" { settings["INFOPLIST_FILE"] = "App/BackgroundAudio.plist" }
     let product = add(["isa": "PBXFileReference", "path": "\(name).app", "explicitFileType": "wrapper.application", "sourceTree": "BUILT_PRODUCTS_DIR"])
     output.append(product)
-    let dependencies = ["CadenzaKit", "CadenzaDomain", "CadenzaLocalSources", "CadenzaAudioEngine", "CadenzaSwiftUI", "CadenzaPersistence"].map {
+    let dependencies = ["CadenzaSystemPlayback", "CadenzaKit", "CadenzaDomain", "CadenzaLocalSources", "CadenzaAudioEngine", "CadenzaSwiftUI", "CadenzaPersistence"].map {
         add(["isa": "XCSwiftPackageProductDependency", "package": package, "productName": $0])
     }
     let frameworks = add(["isa": "PBXFrameworksBuildPhase", "buildActionMask": 2147483647, "files": dependencies.map { add(["isa": "PBXBuildFile", "productRef": $0]) }, "runOnlyForDeploymentPostprocessing": 0])
@@ -74,6 +75,7 @@ for (platform, sdk, supported, family, deployment, version) in [
         targets.append(unit); unitTarget = unit
     }
     settings["PRODUCT_BUNDLE_IDENTIFIER"] = "org.cadenzakit.showcase.\(platform.lowercased()).uitests"
+    settings.removeValue(forKey: "INFOPLIST_FILE")
     settings["TEST_TARGET_NAME"] = name; settings["ENABLE_APP_SANDBOX"] = "NO"
     let testProduct = add(["isa": "PBXFileReference", "path": "\(name)UITests.xctest", "explicitFileType": "wrapper.cfbundle", "sourceTree": "BUILT_PRODUCTS_DIR"])
     output.append(testProduct)

@@ -46,19 +46,19 @@ public struct Cadenza: Sendable {
     }
 
     @MainActor
-    public func makeSession(backend: any PlaybackBackend) -> PlaybackSession {
-        PlaybackSession(kit: self, backend: backend)
+    public func makeSession(backend: any PlaybackBackend, systemPlayback: (any SystemPlaybackController)? = nil) -> PlaybackSession {
+        PlaybackSession(kit: self, backend: backend, systemPlayback: systemPlayback)
     }
 
     @MainActor
-    public func makeResilientSession(backend: any PlaybackBackend, policy: NetworkRecoveryPolicy, clock: any PlaybackClock = ContinuousPlaybackClock()) throws -> PlaybackSession {
+    public func makeResilientSession(backend: any PlaybackBackend, systemPlayback: (any SystemPlaybackController)? = nil, policy: NetworkRecoveryPolicy, clock: any PlaybackClock = ContinuousPlaybackClock()) throws -> PlaybackSession {
         guard configuration.features.networkRecovery else { throw CadenzaError.networkRecoveryDisabled }
-        return makeSession(backend: RecoveringPlaybackBackend(backend: backend, policy: policy, clock: clock))
+        return makeSession(backend: RecoveringPlaybackBackend(backend: backend, policy: policy, clock: clock), systemPlayback: systemPlayback)
     }
 
     @MainActor
-    public func makeResilientQueue(backend: any PlaybackBackend, policy: NetworkRecoveryPolicy, clock: any PlaybackClock = ContinuousPlaybackClock(), random: any RandomNumberGenerator = SystemRandomNumberGenerator()) throws -> PlaybackQueue {
-        let session = try makeResilientSession(backend: backend, policy: policy, clock: clock)
+    public func makeResilientQueue(backend: any PlaybackBackend, systemPlayback: (any SystemPlaybackController)? = nil, policy: NetworkRecoveryPolicy, clock: any PlaybackClock = ContinuousPlaybackClock(), random: any RandomNumberGenerator = SystemRandomNumberGenerator()) throws -> PlaybackQueue {
+        let session = try makeResilientSession(backend: backend, systemPlayback: systemPlayback, policy: policy, clock: clock)
         return PlaybackQueue(session: session, flags: configuration.features, random: random)
     }
 
@@ -104,8 +104,8 @@ public struct Cadenza: Sendable {
     }
 
     @MainActor
-    public func makeQueue(backend: any PlaybackBackend, random: any RandomNumberGenerator = SystemRandomNumberGenerator()) -> PlaybackQueue {
-        PlaybackQueue(session: makeSession(backend: backend), flags: configuration.features, random: random)
+    public func makeQueue(backend: any PlaybackBackend, systemPlayback: (any SystemPlaybackController)? = nil, random: any RandomNumberGenerator = SystemRandomNumberGenerator()) -> PlaybackQueue {
+        PlaybackQueue(session: makeSession(backend: backend, systemPlayback: systemPlayback), flags: configuration.features, random: random)
     }
 
     public func resolve(_ id: MediaID, provider identifier: String? = nil) async throws -> MediaResource {

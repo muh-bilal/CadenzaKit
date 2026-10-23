@@ -30,6 +30,11 @@ public final class PlaybackQueue {
     }
 
     public var snapshot: PlaybackSnapshot { session.snapshot }
+    public func setBackgrounded(_ value: Bool) {
+        if value && !flags.systemPlayback && busy { stop() }
+        session.setBackgrounded(value)
+    }
+
     public var loopRange: LoopRange? { session.loopRange }
 
     public func setLoop(_ range: LoopRange?) async throws {

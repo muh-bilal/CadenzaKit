@@ -11,7 +11,9 @@ public final class AVAudioEngineBackend: EqualizerBackend {
         public let buffer: AVAudioPCMBuffer
     }
 
-    public let supportedFeatures: Set<Feature> = [.playback, .seeking, .equalizer]
+    public var supportedFeatures: Set<Feature> {
+        output == .device ? [.playback, .seeking, .equalizer, .systemPlayback] : [.playback, .seeking, .equalizer]
+    }
     public private(set) var equalizerSettings = EqualizerSettings()
     public let output: Output
     public static let maximumRenderFrames: AVAudioFrameCount = 4096

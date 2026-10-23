@@ -7,6 +7,8 @@ public final class PlaybackSession {
     public private(set) var loopRange: LoopRange?
     private let kit: Cadenza
     private let backend: any PlaybackBackend
+    private let systemPlayback: (any SystemPlaybackController)?
+    public private(set) var isBackgrounded = false
     private var generation: UInt64 = 0
     private var busy = false
     private var provider: String?
@@ -15,9 +17,10 @@ public final class PlaybackSession {
     private var position: Double = 0
     private var state: PlaybackState = .idle
 
-    init(kit: Cadenza, backend: any PlaybackBackend) {
+    init(kit: Cadenza, backend: any PlaybackBackend, systemPlayback: (any SystemPlaybackController)? = nil) {
         self.kit = kit
         self.backend = backend
+        self.systemPlayback = systemPlayback
     }
 
     public var snapshot: PlaybackSnapshot {
@@ -59,6 +62,8 @@ public final class PlaybackSession {
                 if !media.url.isFileURL { try await authorize(.remotePlayback); try check(token) }
                 try await authorize(.playback)
                 try check(token)
+                try await prepareSystemPlayback(token: token)
+                try check(token)
                 try backend.play()
             }
             resource = media
@@ -76,6 +81,8 @@ public final class PlaybackSession {
                 try self.check(token)
                 self.position = 0
             }
+            try await self.prepareSystemPlayback(token: token)
+            try self.check(token)
             try self.backend.play()
             self.state = .playing
         }
@@ -116,6 +123,24 @@ public final class PlaybackSession {
         loopRange = nil
     }
 
+    /// Forward the host lifecycle here. Foregrounding never resumes paused audio.
+    /// Pending foreground-only operations are invalidated when backgrounded.
+    public func setBackgrounded(_ value: Bool) {
+        isBackgrounded = value
+        if value && !kit.configuration.features.systemPlayback {
+            if busy { stop() }
+            else if resource != nil { backend.pause(); state = .paused }
+        }
+    }
+
+    private func prepareSystemPlayback(token: UInt64) async throws {
+        guard isBackgrounded || kit.configuration.features.systemPlayback else { return }
+        try await authorize(.systemPlayback)
+        try check(token)
+        guard let systemPlayback else { throw CadenzaError.featureUnavailable(.systemPlayback, .platform) }
+        try systemPlayback.prepareForPlayback()
+    }
+
     public func setLoop(_ range: LoopRange?) async throws {
         try Task.checkCancellation()
         guard !busy else { throw CadenzaError.operationInProgress }
@@ -128,6 +153,15 @@ public final class PlaybackSession {
 
     public func refresh() async throws {
         try Task.checkCancellation()
+        guard !busy else { throw CadenzaError.operationInProgress }
+        if isBackgrounded && (state == .playing || state == .buffering) {
+            let token = generation
+            do { try await authorize(.systemPlayback); try check(token) }
+            catch {
+                if token == generation { backend.pause(); state = .paused }
+                throw error
+            }
+        }
         let wasPlaying = state == .playing || state == .buffering
         try sample()
         if let range = loopRange, wasPlaying, state == .ended || position >= range.end || position < range.start {
@@ -137,6 +171,8 @@ public final class PlaybackSession {
                     try await self.backend.seek(to: range.start)
                     try self.check(token)
                     self.position = range.start
+                    try await self.prepareSystemPlayback(token: token)
+                    try self.check(token)
                     try self.backend.play()
                     self.state = .playing
                 }
@@ -161,7 +197,7 @@ public final class PlaybackSession {
             if status.ended { state = .ended }
             else if status.isBuffering { state = .buffering }
             else if status.isPlaying { state = .playing }
-            else if state == .buffering { state = .paused }
+            else if state == .buffering || state == .playing { state = .paused }
         } catch {
             try fail(error, token: generation)
         }
@@ -190,6 +226,9 @@ public final class PlaybackSession {
         if resource?.url.isFileURL == false { try await authorize(.remotePlayback) }
         try await authorize(feature)
         for feature in additional { try await authorize(feature) }
+        if (feature == .playback || additional.contains(.playback)) && (isBackgrounded || kit.configuration.features.systemPlayback) {
+            try await authorize(.systemPlayback)
+        }
         try check(token)
         do {
             try await action(token)

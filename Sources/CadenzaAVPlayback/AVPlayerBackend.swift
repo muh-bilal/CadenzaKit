@@ -14,7 +14,7 @@ public final class AVPlayerBackend: PlaybackBackend {
     private var loadingAsset: AVURLAsset?
 
     public init(allowRemote: Bool = false) {
-        supportedFeatures = allowRemote ? [.playback, .seeking, .remotePlayback] : [.playback, .seeking]
+        supportedFeatures = allowRemote ? [.playback, .systemPlayback, .seeking, .remotePlayback] : [.playback, .systemPlayback, .seeking]
     }
 
     public func load(_ resource: MediaResource) async throws -> Double {

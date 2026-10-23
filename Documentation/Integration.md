@@ -54,7 +54,8 @@ The default snapshot permits resolution, which itself needs no audio route.
 `playback` and `seeking` flags control session commands. Sessions additionally check
 the actual backend's declared support. Pause/stop remain available when permission
 is revoked so the host can always halt playback. Runtime snapshots are policy,
-not physical route discovery; actual audio-session/route integration is later work.
+not physical route discovery. The optional system playback adapter configures the
+audio session; hosts still supply route-specific policy.
 
 ## Local playback
 
@@ -85,6 +86,59 @@ the previous state. `refresh()` explicitly samples progress/EOF; no timer is hid
 inside the session. Loading supports finite local media only. Integration tests
 validate real decode/seek/progress/EOF, not physical speaker audibility, interruptions,
 background execution, or output-route behavior.
+
+## Background audio
+
+Select the optional `CadenzaSystemPlayback` product alongside your playback backend.
+The flag defaults to `false` and is enforced by the session/queue service.
+
+```swift
+import CadenzaSystemPlayback
+
+let kit = try Cadenza(
+    configuration: .init(defaultProvider: source.identifier,
+                         features: .init(systemPlayback: true)),
+    providers: [source]
+)
+let queue = kit.makeQueue(backend: AVPlayerBackend(),
+                          systemPlayback: AppleSystemPlaybackController())
+// Insert entries, then start playback normally.
+// Forward host lifecycle changes on MainActor:
+queue.setBackgrounded(true)  // scene enters background; Mac is hidden/minimized
+queue.setBackgrounded(false) // returns to foreground; never auto-resumes
+```
+
+For **iOS/iPadOS and tvOS**, enable Audio in Background Modes in the app target
+(`UIBackgroundModes` must contain the string `audio`). A package cannot add this
+host setting. The adapter checks the host bundle and sets the shared
+`AVAudioSession` category to `.playback`, mode `.default`, then activates it just
+before playback. Missing background mode or a missing adapter produces
+`featureUnavailable(.systemPlayback, .platform)`; native activation errors become
+`playbackFailure`. For **macOS**, no background audio entitlement or audio-session
+configuration is required. Keep the owner alive independently of windows.
+
+Retain the session/queue at app scope and continue calling `refresh()` during
+playback, including in the background, so EOF, queue transitions and A–B loops
+continue. Do not stop it in a view's `onDisappear`. The demo shows this ownership
+and lifecycle forwarding. With the flag disabled, backgrounding pauses loaded
+media and invalidates pending loads; background play is denied. Foregrounding
+never resumes automatically. Foreground playback works without the adapter when
+the flag is disabled.
+
+The source, backend, platform and output-route capability intersection also applies.
+Background refresh rechecks permission and pauses if revoked. Device-output
+`AVAudioEngineBackend` and `AVPlayerBackend` advertise support; offline/manual
+rendering does not. Inject route policy for restrictions particular to your host.
+The adapter does not deactivate the process-wide session on every pause, because
+other audio clients may share it; the host coordinates those clients.
+
+Background audio is not a guarantee against force-quit, OS termination, media
+unavailability, or audio interruptions. The service reflects a stopped native
+backend as paused and does not implement automatic interruption recovery. Now
+Playing metadata, lock-screen/Control Center transport commands, AirPlay route
+selection, and Bluetooth route management are separate, unimplemented integrations.
+Simulator/native-Mac checks do not establish physical-device lock-screen or route
+behavior. Validate those with your app's real media and target hardware.
 
 ## Queue and history
 

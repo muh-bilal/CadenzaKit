@@ -67,5 +67,5 @@ Actual Xcode example apps using the Default layout and original demo media.
 <td><img src="Documentation/Images/showcase-tv.png" width="480" alt="CadenzaKit Apple TV player with remote controls"></td>
 </tr>
 </table>
-The SDK and demos are under development. System playback integration is not implemented.
+The SDK and demos are under development. Opt-in background audio is available through `systemPlayback: true`. Lock-screen metadata and remote transport integration are not yet implemented.
 [Detailed capabilities and limitations](Documentation/Integration.md)

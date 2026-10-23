@@ -29,9 +29,18 @@ The project compiles `App/DemoModel.swift` for all three platform targets:
   command and stops the SDK queue.
 
 Choose a track, seek forward, save its position, close and reopen the app, then
-select **Resume saved**. The apps refresh SDK progress while visible and stop
-when entering the background. There is no background-audio entitlement or system
-Now Playing integration.
+select **Resume saved**. The apps opt in to `FeatureFlags(systemPlayback: true)` and inject
+`AppleSystemPlaybackController`. iOS/iPadOS/tvOS declare `UIBackgroundModes/audio`;
+macOS retains its player when hidden or minimized. The app-owned refresh task keeps
+queue transitions and progress running independently of the view lifecycle.
+Set `systemPlayback: false` in the composition root to pause when backgrounded;
+returning to the app does not automatically resume. UI tests exercise both settings
+using the `CADENZA_SYSTEM_PLAYBACK=0/1` launch environment.
+
+Background audio does not mean execution after force-quit, nor does it prevent
+system interruptions. Now Playing metadata and system remote transport controls
+are not implemented. Physical lock-screen, Bluetooth/AirPlay and interruption
+behavior still require device validation.
 
 Controls use SF Symbols, accessible labels, system fonts, light/dark appearance,
 and English/German localization. Track titles are original media metadata; SDK

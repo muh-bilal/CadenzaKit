@@ -15,8 +15,8 @@ runs the demo model tests, including real playback and bookmark persistence.
 Coverage and test success are separate gates. Real HTTPS and Apple audio-adapter
 tests are required; unavailable network/audio infrastructure fails the job.
 
-**Player UI validation** runs when demo, SwiftUI, presentation, UI-test, package,
-or UI-workflow inputs change. Documentation-only and unrelated service changes
+**Player UI validation** runs when demo, SwiftUI, presentation, system playback,
+playback session/queue, UI-test, package, or UI-workflow inputs change. Documentation-only and unrelated service changes
 do not trigger it. Run it manually for broader integration checks after backend
 changes. Version tags also run the UI matrix. Each platform runs its full UI
 suite once; local iteration should select the tests affected by the change.

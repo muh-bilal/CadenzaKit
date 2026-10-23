@@ -10,6 +10,7 @@ let package = Package(
         .library(name: "CadenzaKit", targets: ["CadenzaKit"]),
         .library(name: "CadenzaTesting", targets: ["CadenzaTesting"]),
         .library(name: "CadenzaLocalSources", targets: ["CadenzaLocalSources"]),
+        .library(name: "CadenzaSystemPlayback", targets: ["CadenzaSystemPlayback"]),
         .library(name: "CadenzaAVPlayback", targets: ["CadenzaAVPlayback"]),
         .library(name: "CadenzaPersistence", targets: ["CadenzaPersistence"]),
         .library(name: "CadenzaArtwork", targets: ["CadenzaArtwork"]),
@@ -24,6 +25,7 @@ let package = Package(
         .target(name: "CadenzaKit", dependencies: ["CadenzaDomain"]),
         .target(name: "CadenzaTesting", dependencies: ["CadenzaDomain"]),
         .target(name: "CadenzaLocalSources", dependencies: ["CadenzaDomain"], resources: [.copy("PrivacyInfo.xcprivacy")]),
+        .target(name: "CadenzaSystemPlayback", dependencies: ["CadenzaDomain"]),
         .target(name: "CadenzaAVPlayback", dependencies: ["CadenzaDomain"]),
         .target(name: "CadenzaPersistence", dependencies: ["CadenzaDomain"], resources: [.copy("PrivacyInfo.xcprivacy")]),
         .target(name: "CadenzaArtwork", dependencies: ["CadenzaDomain"]),
@@ -33,6 +35,6 @@ let package = Package(
         .target(name: "CadenzaPresentation", dependencies: ["CadenzaDomain"]),
         .target(name: "CadenzaSwiftUI", dependencies: ["CadenzaDomain", "CadenzaPresentation"], resources: [.process("Resources")]),
         .testTarget(name: "CadenzaSwiftUITests", dependencies: ["CadenzaSwiftUI", "CadenzaDomain"]),
-        .testTarget(name: "CadenzaKitTests", dependencies: ["CadenzaKit", "CadenzaTesting", "CadenzaLocalSources", "CadenzaAVPlayback", "CadenzaPersistence", "CadenzaArtwork", "CadenzaRemoteSources", "CadenzaDownloads", "CadenzaAudioEngine"])
+        .testTarget(name: "CadenzaKitTests", dependencies: ["CadenzaSystemPlayback", "CadenzaKit", "CadenzaTesting", "CadenzaLocalSources", "CadenzaAVPlayback", "CadenzaPersistence", "CadenzaArtwork", "CadenzaRemoteSources", "CadenzaDownloads", "CadenzaAudioEngine"])
     ]
 )

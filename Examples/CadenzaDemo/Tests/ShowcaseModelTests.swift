@@ -38,6 +38,7 @@ import CadenzaKit
         let model = try DemoModel(tracks: DemoAudio.create(in: directory), backend: backend, store: store, features: .init(equalizer: true))
         var calls = 0
         let controller = Showcase { calls += 1; return .init(model: model, equalizer: model.cadenza.makeEqualizer(backend: backend, store: store)) }
+        controller.setBackgrounded(true)
         controller.send(.next); controller.stop(); await controller.setSound(bass: true)
         XCTAssertNil(controller.model)
         await controller.start(); await controller.start(); XCTAssertEqual(calls, 1)
@@ -80,6 +81,10 @@ import CadenzaKit
         await current?.value
         XCTAssertFalse(controller.busy)
         XCTAssertEqual(model.queue.snapshot.resource?.id, model.tracks[1].id)
+        controller.setBackgrounded(true)
+        XCTAssertEqual(model.queue.snapshot.state, .paused)
+        controller.setBackgrounded(false)
+        XCTAssertEqual(model.queue.snapshot.state, .paused)
         controller.stop()
         let failed = Showcase { throw CadenzaError.corruptStore }
         await failed.start(); XCTAssertNotNil(failed.failure)

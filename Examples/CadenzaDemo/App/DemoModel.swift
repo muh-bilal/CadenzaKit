@@ -19,13 +19,13 @@ public final class DemoModel {
     private let bookmarks: BookmarkService
     public var didChange: (() -> Void)?
 
-    public init(tracks: [MediaResource], backend: any PlaybackBackend, store: any DocumentStore, features: FeatureFlags = .init()) throws {
+    public init(tracks: [MediaResource], backend: any PlaybackBackend, store: any DocumentStore, features: FeatureFlags = .init(), systemPlayback: (any SystemPlaybackController)? = nil) throws {
         guard Set(tracks.map(\.id)).count == tracks.count else { throw CadenzaError.resourceIdentityMismatch }
         self.tracks = tracks
         let source = try LocalFileSource(resources: Dictionary(uniqueKeysWithValues: tracks.map { ($0.id, $0) }))
         let kit = try Cadenza(configuration: .init(defaultProvider: source.identifier, features: features), providers: [source])
         cadenza = kit
-        queue = kit.makeQueue(backend: backend)
+        queue = kit.makeQueue(backend: backend, systemPlayback: systemPlayback)
         bookmarks = kit.makeBookmarks(store: store)
         for track in tracks { try queue.insert(.init(id: UUID(), mediaID: track.id), at: queue.entries.count) }
     }

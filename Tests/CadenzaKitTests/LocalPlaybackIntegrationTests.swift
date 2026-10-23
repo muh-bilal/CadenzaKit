@@ -32,7 +32,7 @@ struct LocalPlaybackIntegrationTests {
         #expect(throws: CadenzaError.unsupportedURL) { try LocalFileSource(resources: [media.id: remote]) }
         let source = try LocalFileSource(resources: [media.id: media])
         #expect(source.identifier == "local")
-        #expect(source.supportedFeatures == [.sourceResolution, .playback, .seeking, .equalizer])
+        #expect(source.supportedFeatures == [.sourceResolution, .playback, .seeking, .equalizer, .systemPlayback])
         #expect(try await source.resolve(media.id) == media)
         let missing = try MediaID("missing")
         await #expect(throws: CadenzaError.resourceNotFound(missing)) { try await source.resolve(missing) }

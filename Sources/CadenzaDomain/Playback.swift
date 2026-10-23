@@ -50,3 +50,10 @@ public struct PlaybackSnapshot: Equatable, Sendable {
         self.duration = duration
     }
 }
+
+/// Host-owned platform setup, invoked immediately before audible playback.
+/// One audio session is shared by the process; hosts coordinate competing players.
+@MainActor
+public protocol SystemPlaybackController: AnyObject, Sendable {
+    func prepareForPlayback() throws
+}

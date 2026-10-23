@@ -14,7 +14,7 @@ public struct HTTPSCatalogSource: SourceProvider {
         }
         self.identifier = identifier
         self.resources = resources
-        self.supportedFeatures = allowsDownloads ? [.sourceResolution, .playback, .seeking, .remotePlayback, .downloads] : [.sourceResolution, .playback, .seeking, .remotePlayback]
+        self.supportedFeatures = allowsDownloads ? [.sourceResolution, .playback, .systemPlayback, .seeking, .remotePlayback, .downloads] : [.sourceResolution, .playback, .systemPlayback, .seeking, .remotePlayback]
     }
 
     public func resolve(_ id: MediaID) async throws -> MediaResource {

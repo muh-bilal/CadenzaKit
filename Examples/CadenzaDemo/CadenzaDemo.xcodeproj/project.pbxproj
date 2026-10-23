@@ -85,7 +85,7 @@
 "relativePath" = "../..";
 };
 "00000000000000000000000E" = {
-"children" = ("000000000000000000000010", "00000000000000000000002B", "000000000000000000000036", "000000000000000000000051", "000000000000000000000061", "00000000000000000000006C", "000000000000000000000087");
+"children" = ("000000000000000000000010", "00000000000000000000002D", "000000000000000000000038", "000000000000000000000055", "000000000000000000000066", "000000000000000000000071", "00000000000000000000008E");
 "isa" = "PBXGroup";
 "name" = "Products";
 "sourceTree" = "<group>";
@@ -104,70 +104,80 @@
 "000000000000000000000011" = {
 "isa" = "XCSwiftPackageProductDependency";
 "package" = "00000000000000000000000D";
-"productName" = "CadenzaKit";
+"productName" = "CadenzaSystemPlayback";
 };
 "000000000000000000000012" = {
 "isa" = "XCSwiftPackageProductDependency";
 "package" = "00000000000000000000000D";
-"productName" = "CadenzaDomain";
+"productName" = "CadenzaKit";
 };
 "000000000000000000000013" = {
 "isa" = "XCSwiftPackageProductDependency";
 "package" = "00000000000000000000000D";
-"productName" = "CadenzaLocalSources";
+"productName" = "CadenzaDomain";
 };
 "000000000000000000000014" = {
 "isa" = "XCSwiftPackageProductDependency";
 "package" = "00000000000000000000000D";
-"productName" = "CadenzaAudioEngine";
+"productName" = "CadenzaLocalSources";
 };
 "000000000000000000000015" = {
 "isa" = "XCSwiftPackageProductDependency";
 "package" = "00000000000000000000000D";
-"productName" = "CadenzaSwiftUI";
+"productName" = "CadenzaAudioEngine";
 };
 "000000000000000000000016" = {
 "isa" = "XCSwiftPackageProductDependency";
 "package" = "00000000000000000000000D";
-"productName" = "CadenzaPersistence";
+"productName" = "CadenzaSwiftUI";
 };
 "000000000000000000000017" = {
-"isa" = "PBXBuildFile";
-"productRef" = "000000000000000000000011";
+"isa" = "XCSwiftPackageProductDependency";
+"package" = "00000000000000000000000D";
+"productName" = "CadenzaPersistence";
 };
 "000000000000000000000018" = {
 "isa" = "PBXBuildFile";
-"productRef" = "000000000000000000000012";
+"productRef" = "000000000000000000000011";
 };
 "000000000000000000000019" = {
 "isa" = "PBXBuildFile";
-"productRef" = "000000000000000000000013";
+"productRef" = "000000000000000000000012";
 };
 "00000000000000000000001A" = {
 "isa" = "PBXBuildFile";
-"productRef" = "000000000000000000000014";
+"productRef" = "000000000000000000000013";
 };
 "00000000000000000000001B" = {
 "isa" = "PBXBuildFile";
-"productRef" = "000000000000000000000015";
+"productRef" = "000000000000000000000014";
 };
 "00000000000000000000001C" = {
 "isa" = "PBXBuildFile";
-"productRef" = "000000000000000000000016";
+"productRef" = "000000000000000000000015";
 };
 "00000000000000000000001D" = {
+"isa" = "PBXBuildFile";
+"productRef" = "000000000000000000000016";
+};
+"00000000000000000000001E" = {
+"isa" = "PBXBuildFile";
+"productRef" = "000000000000000000000017";
+};
+"00000000000000000000001F" = {
 "buildActionMask" = 2147483647;
-"files" = ("000000000000000000000017", "000000000000000000000018", "000000000000000000000019", "00000000000000000000001A", "00000000000000000000001B", "00000000000000000000001C");
+"files" = ("000000000000000000000018", "000000000000000000000019", "00000000000000000000001A", "00000000000000000000001B", "00000000000000000000001C", "00000000000000000000001D", "00000000000000000000001E");
 "isa" = "PBXFrameworksBuildPhase";
 "runOnlyForDeploymentPostprocessing" = 0;
 };
-"00000000000000000000001E" = {
+"000000000000000000000020" = {
 "buildSettings" = {
 "CODE_SIGN_STYLE" = "Automatic";
 "CURRENT_PROJECT_VERSION" = "1";
 "DEBUG_INFORMATION_FORMAT" = "dwarf-with-dsym";
 "ENABLE_TESTABILITY" = "YES";
 "GENERATE_INFOPLIST_FILE" = "YES";
+"INFOPLIST_FILE" = "App/BackgroundAudio.plist";
 "INFOPLIST_KEY_CFBundleDisplayName" = "CadenzaDemo";
 "INFOPLIST_KEY_LSApplicationCategoryType" = "public.app-category.music";
 "INFOPLIST_KEY_UIApplicationSceneManifest_Generation" = "YES";
@@ -190,13 +200,14 @@
 "isa" = "XCBuildConfiguration";
 "name" = "Debug";
 };
-"00000000000000000000001F" = {
+"000000000000000000000021" = {
 "buildSettings" = {
 "CODE_SIGN_STYLE" = "Automatic";
 "CURRENT_PROJECT_VERSION" = "1";
 "DEBUG_INFORMATION_FORMAT" = "dwarf-with-dsym";
 "ENABLE_TESTABILITY" = "YES";
 "GENERATE_INFOPLIST_FILE" = "YES";
+"INFOPLIST_FILE" = "App/BackgroundAudio.plist";
 "INFOPLIST_KEY_CFBundleDisplayName" = "CadenzaDemo";
 "INFOPLIST_KEY_LSApplicationCategoryType" = "public.app-category.music";
 "INFOPLIST_KEY_UIApplicationSceneManifest_Generation" = "YES";
@@ -219,71 +230,71 @@
 "isa" = "XCBuildConfiguration";
 "name" = "Release";
 };
-"000000000000000000000020" = {
-"buildConfigurations" = ("00000000000000000000001E", "00000000000000000000001F");
+"000000000000000000000022" = {
+"buildConfigurations" = ("000000000000000000000020", "000000000000000000000021");
 "defaultConfigurationIsVisible" = 0;
 "defaultConfigurationName" = "Release";
 "isa" = "XCConfigurationList";
 };
-"000000000000000000000021" = {
+"000000000000000000000023" = {
 "fileRef" = "000000000000000000000001";
 "isa" = "PBXBuildFile";
 };
-"000000000000000000000022" = {
+"000000000000000000000024" = {
 "fileRef" = "000000000000000000000002";
 "isa" = "PBXBuildFile";
 };
-"000000000000000000000023" = {
+"000000000000000000000025" = {
 "fileRef" = "000000000000000000000003";
 "isa" = "PBXBuildFile";
 };
-"000000000000000000000024" = {
+"000000000000000000000026" = {
 "fileRef" = "000000000000000000000008";
 "isa" = "PBXBuildFile";
 };
-"000000000000000000000025" = {
+"000000000000000000000027" = {
 "buildActionMask" = 2147483647;
-"files" = ("000000000000000000000021", "000000000000000000000022", "000000000000000000000023", "000000000000000000000024");
+"files" = ("000000000000000000000023", "000000000000000000000024", "000000000000000000000025", "000000000000000000000026");
 "isa" = "PBXSourcesBuildPhase";
 "runOnlyForDeploymentPostprocessing" = 0;
 };
-"000000000000000000000026" = {
+"000000000000000000000028" = {
 "fileRef" = "00000000000000000000000C";
 "isa" = "PBXBuildFile";
 };
-"000000000000000000000027" = {
+"000000000000000000000029" = {
 "fileRef" = "000000000000000000000007";
 "isa" = "PBXBuildFile";
 };
-"000000000000000000000028" = {
+"00000000000000000000002A" = {
 "fileRef" = "000000000000000000000004";
 "isa" = "PBXBuildFile";
 };
-"000000000000000000000029" = {
+"00000000000000000000002B" = {
 "buildActionMask" = 2147483647;
-"files" = ("000000000000000000000026", "000000000000000000000027", "000000000000000000000028");
+"files" = ("000000000000000000000028", "000000000000000000000029", "00000000000000000000002A");
 "isa" = "PBXResourcesBuildPhase";
 "runOnlyForDeploymentPostprocessing" = 0;
 };
-"00000000000000000000002A" = {
-"buildConfigurationList" = "000000000000000000000020";
-"buildPhases" = ("000000000000000000000025", "00000000000000000000001D", "000000000000000000000029");
+"00000000000000000000002C" = {
+"buildConfigurationList" = "000000000000000000000022";
+"buildPhases" = ("000000000000000000000027", "00000000000000000000001F", "00000000000000000000002B");
 "buildRules" = ();
 "dependencies" = ();
 "isa" = "PBXNativeTarget";
 "name" = "CadenzaiOS";
-"packageProductDependencies" = ("000000000000000000000011", "000000000000000000000012", "000000000000000000000013", "000000000000000000000014", "000000000000000000000015", "000000000000000000000016");
+"packageProductDependencies" = ("000000000000000000000011", "000000000000000000000012", "000000000000000000000013", "000000000000000000000014", "000000000000000000000015", "000000000000000000000016", "000000000000000000000017");
 "productName" = "CadenzaiOS";
 "productReference" = "000000000000000000000010";
 "productType" = "com.apple.product-type.application";
 };
-"00000000000000000000002B" = {
+"00000000000000000000002D" = {
 "explicitFileType" = "wrapper.cfbundle";
 "isa" = "PBXFileReference";
 "path" = "CadenzaiOSUITests.xctest";
 "sourceTree" = "BUILT_PRODUCTS_DIR";
 };
-"00000000000000000000002C" = {
+"00000000000000000000002E" = {
 "buildSettings" = {
 "CODE_SIGN_STYLE" = "Automatic";
 "CURRENT_PROJECT_VERSION" = "1";
@@ -314,7 +325,7 @@
 "isa" = "XCBuildConfiguration";
 "name" = "Debug";
 };
-"00000000000000000000002D" = {
+"00000000000000000000002F" = {
 "buildSettings" = {
 "CODE_SIGN_STYLE" = "Automatic";
 "CURRENT_PROJECT_VERSION" = "1";
@@ -345,120 +356,129 @@
 "isa" = "XCBuildConfiguration";
 "name" = "Release";
 };
-"00000000000000000000002E" = {
-"buildConfigurations" = ("00000000000000000000002C", "00000000000000000000002D");
+"000000000000000000000030" = {
+"buildConfigurations" = ("00000000000000000000002E", "00000000000000000000002F");
 "defaultConfigurationIsVisible" = 0;
 "defaultConfigurationName" = "Release";
 "isa" = "XCConfigurationList";
 };
-"00000000000000000000002F" = {
+"000000000000000000000031" = {
 "fileRef" = "00000000000000000000000B";
 "isa" = "PBXBuildFile";
 };
-"000000000000000000000030" = {
+"000000000000000000000032" = {
 "buildActionMask" = 2147483647;
-"files" = ("00000000000000000000002F");
+"files" = ("000000000000000000000031");
 "isa" = "PBXSourcesBuildPhase";
 "runOnlyForDeploymentPostprocessing" = 0;
 };
-"000000000000000000000031" = {
+"000000000000000000000033" = {
 "buildActionMask" = 2147483647;
 "files" = ();
 "isa" = "PBXFrameworksBuildPhase";
 "runOnlyForDeploymentPostprocessing" = 0;
 };
-"000000000000000000000032" = {
+"000000000000000000000034" = {
 "fileRef" = "00000000000000000000000C";
 "isa" = "PBXBuildFile";
 };
-"000000000000000000000033" = {
+"000000000000000000000035" = {
 "buildActionMask" = 2147483647;
-"files" = ("000000000000000000000032");
+"files" = ("000000000000000000000034");
 "isa" = "PBXResourcesBuildPhase";
 "runOnlyForDeploymentPostprocessing" = 0;
 };
-"000000000000000000000034" = {
+"000000000000000000000036" = {
 "isa" = "PBXTargetDependency";
-"target" = "00000000000000000000002A";
+"target" = "00000000000000000000002C";
 };
-"000000000000000000000035" = {
-"buildConfigurationList" = "00000000000000000000002E";
-"buildPhases" = ("000000000000000000000030", "000000000000000000000031", "000000000000000000000033");
+"000000000000000000000037" = {
+"buildConfigurationList" = "000000000000000000000030";
+"buildPhases" = ("000000000000000000000032", "000000000000000000000033", "000000000000000000000035");
 "buildRules" = ();
-"dependencies" = ("000000000000000000000034");
+"dependencies" = ("000000000000000000000036");
 "isa" = "PBXNativeTarget";
 "name" = "CadenzaiOSUITests";
 "productName" = "CadenzaiOSUITests";
-"productReference" = "00000000000000000000002B";
+"productReference" = "00000000000000000000002D";
 "productType" = "com.apple.product-type.bundle.ui-testing";
 };
-"000000000000000000000036" = {
+"000000000000000000000038" = {
 "explicitFileType" = "wrapper.application";
 "isa" = "PBXFileReference";
 "path" = "CadenzamacOS.app";
 "sourceTree" = "BUILT_PRODUCTS_DIR";
 };
-"000000000000000000000037" = {
-"isa" = "XCSwiftPackageProductDependency";
-"package" = "00000000000000000000000D";
-"productName" = "CadenzaKit";
-};
-"000000000000000000000038" = {
-"isa" = "XCSwiftPackageProductDependency";
-"package" = "00000000000000000000000D";
-"productName" = "CadenzaDomain";
-};
 "000000000000000000000039" = {
 "isa" = "XCSwiftPackageProductDependency";
 "package" = "00000000000000000000000D";
-"productName" = "CadenzaLocalSources";
+"productName" = "CadenzaSystemPlayback";
 };
 "00000000000000000000003A" = {
 "isa" = "XCSwiftPackageProductDependency";
 "package" = "00000000000000000000000D";
-"productName" = "CadenzaAudioEngine";
+"productName" = "CadenzaKit";
 };
 "00000000000000000000003B" = {
 "isa" = "XCSwiftPackageProductDependency";
 "package" = "00000000000000000000000D";
-"productName" = "CadenzaSwiftUI";
+"productName" = "CadenzaDomain";
 };
 "00000000000000000000003C" = {
 "isa" = "XCSwiftPackageProductDependency";
 "package" = "00000000000000000000000D";
-"productName" = "CadenzaPersistence";
+"productName" = "CadenzaLocalSources";
 };
 "00000000000000000000003D" = {
-"isa" = "PBXBuildFile";
-"productRef" = "000000000000000000000037";
+"isa" = "XCSwiftPackageProductDependency";
+"package" = "00000000000000000000000D";
+"productName" = "CadenzaAudioEngine";
 };
 "00000000000000000000003E" = {
-"isa" = "PBXBuildFile";
-"productRef" = "000000000000000000000038";
+"isa" = "XCSwiftPackageProductDependency";
+"package" = "00000000000000000000000D";
+"productName" = "CadenzaSwiftUI";
 };
 "00000000000000000000003F" = {
-"isa" = "PBXBuildFile";
-"productRef" = "000000000000000000000039";
+"isa" = "XCSwiftPackageProductDependency";
+"package" = "00000000000000000000000D";
+"productName" = "CadenzaPersistence";
 };
 "000000000000000000000040" = {
 "isa" = "PBXBuildFile";
-"productRef" = "00000000000000000000003A";
+"productRef" = "000000000000000000000039";
 };
 "000000000000000000000041" = {
 "isa" = "PBXBuildFile";
-"productRef" = "00000000000000000000003B";
+"productRef" = "00000000000000000000003A";
 };
 "000000000000000000000042" = {
 "isa" = "PBXBuildFile";
-"productRef" = "00000000000000000000003C";
+"productRef" = "00000000000000000000003B";
 };
 "000000000000000000000043" = {
+"isa" = "PBXBuildFile";
+"productRef" = "00000000000000000000003C";
+};
+"000000000000000000000044" = {
+"isa" = "PBXBuildFile";
+"productRef" = "00000000000000000000003D";
+};
+"000000000000000000000045" = {
+"isa" = "PBXBuildFile";
+"productRef" = "00000000000000000000003E";
+};
+"000000000000000000000046" = {
+"isa" = "PBXBuildFile";
+"productRef" = "00000000000000000000003F";
+};
+"000000000000000000000047" = {
 "buildActionMask" = 2147483647;
-"files" = ("00000000000000000000003D", "00000000000000000000003E", "00000000000000000000003F", "000000000000000000000040", "000000000000000000000041", "000000000000000000000042");
+"files" = ("000000000000000000000040", "000000000000000000000041", "000000000000000000000042", "000000000000000000000043", "000000000000000000000044", "000000000000000000000045", "000000000000000000000046");
 "isa" = "PBXFrameworksBuildPhase";
 "runOnlyForDeploymentPostprocessing" = 0;
 };
-"000000000000000000000044" = {
+"000000000000000000000048" = {
 "buildSettings" = {
 "CODE_SIGN_STYLE" = "Automatic";
 "CURRENT_PROJECT_VERSION" = "1";
@@ -484,7 +504,7 @@
 "isa" = "XCBuildConfiguration";
 "name" = "Debug";
 };
-"000000000000000000000045" = {
+"000000000000000000000049" = {
 "buildSettings" = {
 "CODE_SIGN_STYLE" = "Automatic";
 "CURRENT_PROJECT_VERSION" = "1";
@@ -510,101 +530,105 @@
 "isa" = "XCBuildConfiguration";
 "name" = "Release";
 };
-"000000000000000000000046" = {
-"buildConfigurations" = ("000000000000000000000044", "000000000000000000000045");
+"00000000000000000000004A" = {
+"buildConfigurations" = ("000000000000000000000048", "000000000000000000000049");
 "defaultConfigurationIsVisible" = 0;
 "defaultConfigurationName" = "Release";
 "isa" = "XCConfigurationList";
 };
-"000000000000000000000047" = {
+"00000000000000000000004B" = {
 "fileRef" = "000000000000000000000001";
 "isa" = "PBXBuildFile";
 };
-"000000000000000000000048" = {
+"00000000000000000000004C" = {
 "fileRef" = "000000000000000000000002";
 "isa" = "PBXBuildFile";
 };
-"000000000000000000000049" = {
+"00000000000000000000004D" = {
 "fileRef" = "000000000000000000000003";
 "isa" = "PBXBuildFile";
 };
-"00000000000000000000004A" = {
-"fileRef" = "000000000000000000000008";
-"isa" = "PBXBuildFile";
-};
-"00000000000000000000004B" = {
-"buildActionMask" = 2147483647;
-"files" = ("000000000000000000000047", "000000000000000000000048", "000000000000000000000049", "00000000000000000000004A");
-"isa" = "PBXSourcesBuildPhase";
-"runOnlyForDeploymentPostprocessing" = 0;
-};
-"00000000000000000000004C" = {
-"fileRef" = "00000000000000000000000C";
-"isa" = "PBXBuildFile";
-};
-"00000000000000000000004D" = {
-"fileRef" = "000000000000000000000007";
-"isa" = "PBXBuildFile";
-};
 "00000000000000000000004E" = {
-"fileRef" = "000000000000000000000004";
+"fileRef" = "000000000000000000000008";
 "isa" = "PBXBuildFile";
 };
 "00000000000000000000004F" = {
 "buildActionMask" = 2147483647;
-"files" = ("00000000000000000000004C", "00000000000000000000004D", "00000000000000000000004E");
-"isa" = "PBXResourcesBuildPhase";
+"files" = ("00000000000000000000004B", "00000000000000000000004C", "00000000000000000000004D", "00000000000000000000004E");
+"isa" = "PBXSourcesBuildPhase";
 "runOnlyForDeploymentPostprocessing" = 0;
 };
 "000000000000000000000050" = {
-"buildConfigurationList" = "000000000000000000000046";
-"buildPhases" = ("00000000000000000000004B", "000000000000000000000043", "00000000000000000000004F");
+"fileRef" = "00000000000000000000000C";
+"isa" = "PBXBuildFile";
+};
+"000000000000000000000051" = {
+"fileRef" = "000000000000000000000007";
+"isa" = "PBXBuildFile";
+};
+"000000000000000000000052" = {
+"fileRef" = "000000000000000000000004";
+"isa" = "PBXBuildFile";
+};
+"000000000000000000000053" = {
+"buildActionMask" = 2147483647;
+"files" = ("000000000000000000000050", "000000000000000000000051", "000000000000000000000052");
+"isa" = "PBXResourcesBuildPhase";
+"runOnlyForDeploymentPostprocessing" = 0;
+};
+"000000000000000000000054" = {
+"buildConfigurationList" = "00000000000000000000004A";
+"buildPhases" = ("00000000000000000000004F", "000000000000000000000047", "000000000000000000000053");
 "buildRules" = ();
 "dependencies" = ();
 "isa" = "PBXNativeTarget";
 "name" = "CadenzamacOS";
-"packageProductDependencies" = ("000000000000000000000037", "000000000000000000000038", "000000000000000000000039", "00000000000000000000003A", "00000000000000000000003B", "00000000000000000000003C");
+"packageProductDependencies" = ("000000000000000000000039", "00000000000000000000003A", "00000000000000000000003B", "00000000000000000000003C", "00000000000000000000003D", "00000000000000000000003E", "00000000000000000000003F");
 "productName" = "CadenzamacOS";
-"productReference" = "000000000000000000000036";
+"productReference" = "000000000000000000000038";
 "productType" = "com.apple.product-type.application";
 };
-"000000000000000000000051" = {
+"000000000000000000000055" = {
 "explicitFileType" = "wrapper.cfbundle";
 "isa" = "PBXFileReference";
 "path" = "ShowcaseModelTests.xctest";
 "sourceTree" = "BUILT_PRODUCTS_DIR";
 };
-"000000000000000000000052" = {
-"isa" = "PBXBuildFile";
-"productRef" = "000000000000000000000037";
-};
-"000000000000000000000053" = {
-"isa" = "PBXBuildFile";
-"productRef" = "000000000000000000000038";
-};
-"000000000000000000000054" = {
+"000000000000000000000056" = {
 "isa" = "PBXBuildFile";
 "productRef" = "000000000000000000000039";
 };
-"000000000000000000000055" = {
+"000000000000000000000057" = {
 "isa" = "PBXBuildFile";
 "productRef" = "00000000000000000000003A";
 };
-"000000000000000000000056" = {
+"000000000000000000000058" = {
 "isa" = "PBXBuildFile";
 "productRef" = "00000000000000000000003B";
 };
-"000000000000000000000057" = {
+"000000000000000000000059" = {
 "isa" = "PBXBuildFile";
 "productRef" = "00000000000000000000003C";
 };
-"000000000000000000000058" = {
+"00000000000000000000005A" = {
+"isa" = "PBXBuildFile";
+"productRef" = "00000000000000000000003D";
+};
+"00000000000000000000005B" = {
+"isa" = "PBXBuildFile";
+"productRef" = "00000000000000000000003E";
+};
+"00000000000000000000005C" = {
+"isa" = "PBXBuildFile";
+"productRef" = "00000000000000000000003F";
+};
+"00000000000000000000005D" = {
 "buildActionMask" = 2147483647;
-"files" = ("000000000000000000000052", "000000000000000000000053", "000000000000000000000054", "000000000000000000000055", "000000000000000000000056", "000000000000000000000057");
+"files" = ("000000000000000000000056", "000000000000000000000057", "000000000000000000000058", "000000000000000000000059", "00000000000000000000005A", "00000000000000000000005B", "00000000000000000000005C");
 "isa" = "PBXFrameworksBuildPhase";
 "runOnlyForDeploymentPostprocessing" = 0;
 };
-"000000000000000000000059" = {
+"00000000000000000000005E" = {
 "buildSettings" = {
 "BUNDLE_LOADER" = "$(TEST_HOST)";
 "CODE_SIGN_STYLE" = "Automatic";
@@ -632,7 +656,7 @@
 "isa" = "XCBuildConfiguration";
 "name" = "Debug";
 };
-"00000000000000000000005A" = {
+"00000000000000000000005F" = {
 "buildSettings" = {
 "BUNDLE_LOADER" = "$(TEST_HOST)";
 "CODE_SIGN_STYLE" = "Automatic";
@@ -660,49 +684,49 @@
 "isa" = "XCBuildConfiguration";
 "name" = "Release";
 };
-"00000000000000000000005B" = {
-"buildConfigurations" = ("000000000000000000000059", "00000000000000000000005A");
+"000000000000000000000060" = {
+"buildConfigurations" = ("00000000000000000000005E", "00000000000000000000005F");
 "defaultConfigurationIsVisible" = 0;
 "defaultConfigurationName" = "Release";
 "isa" = "XCConfigurationList";
 };
-"00000000000000000000005C" = {
+"000000000000000000000061" = {
 "fileRef" = "000000000000000000000009";
 "isa" = "PBXBuildFile";
 };
-"00000000000000000000005D" = {
+"000000000000000000000062" = {
 "fileRef" = "00000000000000000000000A";
 "isa" = "PBXBuildFile";
 };
-"00000000000000000000005E" = {
+"000000000000000000000063" = {
 "buildActionMask" = 2147483647;
-"files" = ("00000000000000000000005C", "00000000000000000000005D");
+"files" = ("000000000000000000000061", "000000000000000000000062");
 "isa" = "PBXSourcesBuildPhase";
 "runOnlyForDeploymentPostprocessing" = 0;
 };
-"00000000000000000000005F" = {
+"000000000000000000000064" = {
 "isa" = "PBXTargetDependency";
-"target" = "000000000000000000000050";
+"target" = "000000000000000000000054";
 };
-"000000000000000000000060" = {
-"buildConfigurationList" = "00000000000000000000005B";
-"buildPhases" = ("00000000000000000000005E", "000000000000000000000058");
+"000000000000000000000065" = {
+"buildConfigurationList" = "000000000000000000000060";
+"buildPhases" = ("000000000000000000000063", "00000000000000000000005D");
 "buildRules" = ();
-"dependencies" = ("00000000000000000000005F");
+"dependencies" = ("000000000000000000000064");
 "isa" = "PBXNativeTarget";
 "name" = "ShowcaseModelTests";
-"packageProductDependencies" = ("000000000000000000000037", "000000000000000000000038", "000000000000000000000039", "00000000000000000000003A", "00000000000000000000003B", "00000000000000000000003C");
+"packageProductDependencies" = ("000000000000000000000039", "00000000000000000000003A", "00000000000000000000003B", "00000000000000000000003C", "00000000000000000000003D", "00000000000000000000003E", "00000000000000000000003F");
 "productName" = "ShowcaseModelTests";
-"productReference" = "000000000000000000000051";
+"productReference" = "000000000000000000000055";
 "productType" = "com.apple.product-type.bundle.unit-test";
 };
-"000000000000000000000061" = {
+"000000000000000000000066" = {
 "explicitFileType" = "wrapper.cfbundle";
 "isa" = "PBXFileReference";
 "path" = "CadenzamacOSUITests.xctest";
 "sourceTree" = "BUILT_PRODUCTS_DIR";
 };
-"000000000000000000000062" = {
+"000000000000000000000067" = {
 "buildSettings" = {
 "CODE_SIGN_STYLE" = "Automatic";
 "CURRENT_PROJECT_VERSION" = "1";
@@ -729,7 +753,7 @@
 "isa" = "XCBuildConfiguration";
 "name" = "Debug";
 };
-"000000000000000000000063" = {
+"000000000000000000000068" = {
 "buildSettings" = {
 "CODE_SIGN_STYLE" = "Automatic";
 "CURRENT_PROJECT_VERSION" = "1";
@@ -756,126 +780,136 @@
 "isa" = "XCBuildConfiguration";
 "name" = "Release";
 };
-"000000000000000000000064" = {
-"buildConfigurations" = ("000000000000000000000062", "000000000000000000000063");
+"000000000000000000000069" = {
+"buildConfigurations" = ("000000000000000000000067", "000000000000000000000068");
 "defaultConfigurationIsVisible" = 0;
 "defaultConfigurationName" = "Release";
 "isa" = "XCConfigurationList";
 };
-"000000000000000000000065" = {
+"00000000000000000000006A" = {
 "fileRef" = "00000000000000000000000B";
 "isa" = "PBXBuildFile";
 };
-"000000000000000000000066" = {
+"00000000000000000000006B" = {
 "buildActionMask" = 2147483647;
-"files" = ("000000000000000000000065");
+"files" = ("00000000000000000000006A");
 "isa" = "PBXSourcesBuildPhase";
 "runOnlyForDeploymentPostprocessing" = 0;
 };
-"000000000000000000000067" = {
+"00000000000000000000006C" = {
 "buildActionMask" = 2147483647;
 "files" = ();
 "isa" = "PBXFrameworksBuildPhase";
 "runOnlyForDeploymentPostprocessing" = 0;
 };
-"000000000000000000000068" = {
+"00000000000000000000006D" = {
 "fileRef" = "00000000000000000000000C";
 "isa" = "PBXBuildFile";
 };
-"000000000000000000000069" = {
+"00000000000000000000006E" = {
 "buildActionMask" = 2147483647;
-"files" = ("000000000000000000000068");
+"files" = ("00000000000000000000006D");
 "isa" = "PBXResourcesBuildPhase";
 "runOnlyForDeploymentPostprocessing" = 0;
 };
-"00000000000000000000006A" = {
+"00000000000000000000006F" = {
 "isa" = "PBXTargetDependency";
-"target" = "000000000000000000000050";
+"target" = "000000000000000000000054";
 };
-"00000000000000000000006B" = {
-"buildConfigurationList" = "000000000000000000000064";
-"buildPhases" = ("000000000000000000000066", "000000000000000000000067", "000000000000000000000069");
+"000000000000000000000070" = {
+"buildConfigurationList" = "000000000000000000000069";
+"buildPhases" = ("00000000000000000000006B", "00000000000000000000006C", "00000000000000000000006E");
 "buildRules" = ();
-"dependencies" = ("00000000000000000000006A");
+"dependencies" = ("00000000000000000000006F");
 "isa" = "PBXNativeTarget";
 "name" = "CadenzamacOSUITests";
 "productName" = "CadenzamacOSUITests";
-"productReference" = "000000000000000000000061";
+"productReference" = "000000000000000000000066";
 "productType" = "com.apple.product-type.bundle.ui-testing";
 };
-"00000000000000000000006C" = {
+"000000000000000000000071" = {
 "explicitFileType" = "wrapper.application";
 "isa" = "PBXFileReference";
 "path" = "CadenzatvOS.app";
 "sourceTree" = "BUILT_PRODUCTS_DIR";
 };
-"00000000000000000000006D" = {
+"000000000000000000000072" = {
+"isa" = "XCSwiftPackageProductDependency";
+"package" = "00000000000000000000000D";
+"productName" = "CadenzaSystemPlayback";
+};
+"000000000000000000000073" = {
 "isa" = "XCSwiftPackageProductDependency";
 "package" = "00000000000000000000000D";
 "productName" = "CadenzaKit";
 };
-"00000000000000000000006E" = {
+"000000000000000000000074" = {
 "isa" = "XCSwiftPackageProductDependency";
 "package" = "00000000000000000000000D";
 "productName" = "CadenzaDomain";
 };
-"00000000000000000000006F" = {
+"000000000000000000000075" = {
 "isa" = "XCSwiftPackageProductDependency";
 "package" = "00000000000000000000000D";
 "productName" = "CadenzaLocalSources";
 };
-"000000000000000000000070" = {
+"000000000000000000000076" = {
 "isa" = "XCSwiftPackageProductDependency";
 "package" = "00000000000000000000000D";
 "productName" = "CadenzaAudioEngine";
 };
-"000000000000000000000071" = {
+"000000000000000000000077" = {
 "isa" = "XCSwiftPackageProductDependency";
 "package" = "00000000000000000000000D";
 "productName" = "CadenzaSwiftUI";
 };
-"000000000000000000000072" = {
+"000000000000000000000078" = {
 "isa" = "XCSwiftPackageProductDependency";
 "package" = "00000000000000000000000D";
 "productName" = "CadenzaPersistence";
 };
-"000000000000000000000073" = {
-"isa" = "PBXBuildFile";
-"productRef" = "00000000000000000000006D";
-};
-"000000000000000000000074" = {
-"isa" = "PBXBuildFile";
-"productRef" = "00000000000000000000006E";
-};
-"000000000000000000000075" = {
-"isa" = "PBXBuildFile";
-"productRef" = "00000000000000000000006F";
-};
-"000000000000000000000076" = {
-"isa" = "PBXBuildFile";
-"productRef" = "000000000000000000000070";
-};
-"000000000000000000000077" = {
-"isa" = "PBXBuildFile";
-"productRef" = "000000000000000000000071";
-};
-"000000000000000000000078" = {
+"000000000000000000000079" = {
 "isa" = "PBXBuildFile";
 "productRef" = "000000000000000000000072";
 };
-"000000000000000000000079" = {
+"00000000000000000000007A" = {
+"isa" = "PBXBuildFile";
+"productRef" = "000000000000000000000073";
+};
+"00000000000000000000007B" = {
+"isa" = "PBXBuildFile";
+"productRef" = "000000000000000000000074";
+};
+"00000000000000000000007C" = {
+"isa" = "PBXBuildFile";
+"productRef" = "000000000000000000000075";
+};
+"00000000000000000000007D" = {
+"isa" = "PBXBuildFile";
+"productRef" = "000000000000000000000076";
+};
+"00000000000000000000007E" = {
+"isa" = "PBXBuildFile";
+"productRef" = "000000000000000000000077";
+};
+"00000000000000000000007F" = {
+"isa" = "PBXBuildFile";
+"productRef" = "000000000000000000000078";
+};
+"000000000000000000000080" = {
 "buildActionMask" = 2147483647;
-"files" = ("000000000000000000000073", "000000000000000000000074", "000000000000000000000075", "000000000000000000000076", "000000000000000000000077", "000000000000000000000078");
+"files" = ("000000000000000000000079", "00000000000000000000007A", "00000000000000000000007B", "00000000000000000000007C", "00000000000000000000007D", "00000000000000000000007E", "00000000000000000000007F");
 "isa" = "PBXFrameworksBuildPhase";
 "runOnlyForDeploymentPostprocessing" = 0;
 };
-"00000000000000000000007A" = {
+"000000000000000000000081" = {
 "buildSettings" = {
 "CODE_SIGN_STYLE" = "Automatic";
 "CURRENT_PROJECT_VERSION" = "1";
 "DEBUG_INFORMATION_FORMAT" = "dwarf-with-dsym";
 "ENABLE_TESTABILITY" = "YES";
 "GENERATE_INFOPLIST_FILE" = "YES";
+"INFOPLIST_FILE" = "App/BackgroundAudio.plist";
 "INFOPLIST_KEY_CFBundleDisplayName" = "CadenzaDemo";
 "INFOPLIST_KEY_LSApplicationCategoryType" = "public.app-category.music";
 "MARKETING_VERSION" = "1.0";
@@ -895,13 +929,14 @@
 "isa" = "XCBuildConfiguration";
 "name" = "Debug";
 };
-"00000000000000000000007B" = {
+"000000000000000000000082" = {
 "buildSettings" = {
 "CODE_SIGN_STYLE" = "Automatic";
 "CURRENT_PROJECT_VERSION" = "1";
 "DEBUG_INFORMATION_FORMAT" = "dwarf-with-dsym";
 "ENABLE_TESTABILITY" = "YES";
 "GENERATE_INFOPLIST_FILE" = "YES";
+"INFOPLIST_FILE" = "App/BackgroundAudio.plist";
 "INFOPLIST_KEY_CFBundleDisplayName" = "CadenzaDemo";
 "INFOPLIST_KEY_LSApplicationCategoryType" = "public.app-category.music";
 "MARKETING_VERSION" = "1.0";
@@ -921,71 +956,71 @@
 "isa" = "XCBuildConfiguration";
 "name" = "Release";
 };
-"00000000000000000000007C" = {
-"buildConfigurations" = ("00000000000000000000007A", "00000000000000000000007B");
+"000000000000000000000083" = {
+"buildConfigurations" = ("000000000000000000000081", "000000000000000000000082");
 "defaultConfigurationIsVisible" = 0;
 "defaultConfigurationName" = "Release";
 "isa" = "XCConfigurationList";
 };
-"00000000000000000000007D" = {
+"000000000000000000000084" = {
 "fileRef" = "000000000000000000000001";
 "isa" = "PBXBuildFile";
 };
-"00000000000000000000007E" = {
+"000000000000000000000085" = {
 "fileRef" = "000000000000000000000002";
 "isa" = "PBXBuildFile";
 };
-"00000000000000000000007F" = {
+"000000000000000000000086" = {
 "fileRef" = "000000000000000000000003";
 "isa" = "PBXBuildFile";
 };
-"000000000000000000000080" = {
+"000000000000000000000087" = {
 "fileRef" = "000000000000000000000008";
 "isa" = "PBXBuildFile";
 };
-"000000000000000000000081" = {
+"000000000000000000000088" = {
 "buildActionMask" = 2147483647;
-"files" = ("00000000000000000000007D", "00000000000000000000007E", "00000000000000000000007F", "000000000000000000000080");
+"files" = ("000000000000000000000084", "000000000000000000000085", "000000000000000000000086", "000000000000000000000087");
 "isa" = "PBXSourcesBuildPhase";
 "runOnlyForDeploymentPostprocessing" = 0;
 };
-"000000000000000000000082" = {
+"000000000000000000000089" = {
 "fileRef" = "00000000000000000000000C";
 "isa" = "PBXBuildFile";
 };
-"000000000000000000000083" = {
+"00000000000000000000008A" = {
 "fileRef" = "000000000000000000000007";
 "isa" = "PBXBuildFile";
 };
-"000000000000000000000084" = {
+"00000000000000000000008B" = {
 "fileRef" = "000000000000000000000004";
 "isa" = "PBXBuildFile";
 };
-"000000000000000000000085" = {
+"00000000000000000000008C" = {
 "buildActionMask" = 2147483647;
-"files" = ("000000000000000000000082", "000000000000000000000083", "000000000000000000000084");
+"files" = ("000000000000000000000089", "00000000000000000000008A", "00000000000000000000008B");
 "isa" = "PBXResourcesBuildPhase";
 "runOnlyForDeploymentPostprocessing" = 0;
 };
-"000000000000000000000086" = {
-"buildConfigurationList" = "00000000000000000000007C";
-"buildPhases" = ("000000000000000000000081", "000000000000000000000079", "000000000000000000000085");
+"00000000000000000000008D" = {
+"buildConfigurationList" = "000000000000000000000083";
+"buildPhases" = ("000000000000000000000088", "000000000000000000000080", "00000000000000000000008C");
 "buildRules" = ();
 "dependencies" = ();
 "isa" = "PBXNativeTarget";
 "name" = "CadenzatvOS";
-"packageProductDependencies" = ("00000000000000000000006D", "00000000000000000000006E", "00000000000000000000006F", "000000000000000000000070", "000000000000000000000071", "000000000000000000000072");
+"packageProductDependencies" = ("000000000000000000000072", "000000000000000000000073", "000000000000000000000074", "000000000000000000000075", "000000000000000000000076", "000000000000000000000077", "000000000000000000000078");
 "productName" = "CadenzatvOS";
-"productReference" = "00000000000000000000006C";
+"productReference" = "000000000000000000000071";
 "productType" = "com.apple.product-type.application";
 };
-"000000000000000000000087" = {
+"00000000000000000000008E" = {
 "explicitFileType" = "wrapper.cfbundle";
 "isa" = "PBXFileReference";
 "path" = "CadenzatvOSUITests.xctest";
 "sourceTree" = "BUILT_PRODUCTS_DIR";
 };
-"000000000000000000000088" = {
+"00000000000000000000008F" = {
 "buildSettings" = {
 "CODE_SIGN_STYLE" = "Automatic";
 "CURRENT_PROJECT_VERSION" = "1";
@@ -1013,7 +1048,7 @@
 "isa" = "XCBuildConfiguration";
 "name" = "Debug";
 };
-"000000000000000000000089" = {
+"000000000000000000000090" = {
 "buildSettings" = {
 "CODE_SIGN_STYLE" = "Automatic";
 "CURRENT_PROJECT_VERSION" = "1";
@@ -1041,54 +1076,54 @@
 "isa" = "XCBuildConfiguration";
 "name" = "Release";
 };
-"00000000000000000000008A" = {
-"buildConfigurations" = ("000000000000000000000088", "000000000000000000000089");
+"000000000000000000000091" = {
+"buildConfigurations" = ("00000000000000000000008F", "000000000000000000000090");
 "defaultConfigurationIsVisible" = 0;
 "defaultConfigurationName" = "Release";
 "isa" = "XCConfigurationList";
 };
-"00000000000000000000008B" = {
+"000000000000000000000092" = {
 "fileRef" = "00000000000000000000000B";
 "isa" = "PBXBuildFile";
 };
-"00000000000000000000008C" = {
+"000000000000000000000093" = {
 "buildActionMask" = 2147483647;
-"files" = ("00000000000000000000008B");
+"files" = ("000000000000000000000092");
 "isa" = "PBXSourcesBuildPhase";
 "runOnlyForDeploymentPostprocessing" = 0;
 };
-"00000000000000000000008D" = {
+"000000000000000000000094" = {
 "buildActionMask" = 2147483647;
 "files" = ();
 "isa" = "PBXFrameworksBuildPhase";
 "runOnlyForDeploymentPostprocessing" = 0;
 };
-"00000000000000000000008E" = {
+"000000000000000000000095" = {
 "fileRef" = "00000000000000000000000C";
 "isa" = "PBXBuildFile";
 };
-"00000000000000000000008F" = {
+"000000000000000000000096" = {
 "buildActionMask" = 2147483647;
-"files" = ("00000000000000000000008E");
+"files" = ("000000000000000000000095");
 "isa" = "PBXResourcesBuildPhase";
 "runOnlyForDeploymentPostprocessing" = 0;
 };
-"000000000000000000000090" = {
+"000000000000000000000097" = {
 "isa" = "PBXTargetDependency";
-"target" = "000000000000000000000086";
+"target" = "00000000000000000000008D";
 };
-"000000000000000000000091" = {
-"buildConfigurationList" = "00000000000000000000008A";
-"buildPhases" = ("00000000000000000000008C", "00000000000000000000008D", "00000000000000000000008F");
+"000000000000000000000098" = {
+"buildConfigurationList" = "000000000000000000000091";
+"buildPhases" = ("000000000000000000000093", "000000000000000000000094", "000000000000000000000096");
 "buildRules" = ();
-"dependencies" = ("000000000000000000000090");
+"dependencies" = ("000000000000000000000097");
 "isa" = "PBXNativeTarget";
 "name" = "CadenzatvOSUITests";
 "productName" = "CadenzatvOSUITests";
-"productReference" = "000000000000000000000087";
+"productReference" = "00000000000000000000008E";
 "productType" = "com.apple.product-type.bundle.ui-testing";
 };
-"000000000000000000000092" = {
+"000000000000000000000099" = {
 "buildSettings" = {
 "CLANG_ENABLE_MODULES" = "YES";
 "DEBUG_INFORMATION_FORMAT" = "dwarf-with-dsym";
@@ -1098,7 +1133,7 @@
 "isa" = "XCBuildConfiguration";
 "name" = "Debug";
 };
-"000000000000000000000093" = {
+"00000000000000000000009A" = {
 "buildSettings" = {
 "CLANG_ENABLE_MODULES" = "YES";
 "DEBUG_INFORMATION_FORMAT" = "dwarf-with-dsym";
@@ -1108,18 +1143,18 @@
 "isa" = "XCBuildConfiguration";
 "name" = "Release";
 };
-"000000000000000000000094" = {
-"buildConfigurations" = ("000000000000000000000092", "000000000000000000000093");
+"00000000000000000000009B" = {
+"buildConfigurations" = ("000000000000000000000099", "00000000000000000000009A");
 "defaultConfigurationIsVisible" = 0;
 "defaultConfigurationName" = "Release";
 "isa" = "XCConfigurationList";
 };
-"000000000000000000000095" = {
+"00000000000000000000009C" = {
 "attributes" = {
 "BuildIndependentTargetsInParallel" = "YES";
 "LastUpgradeCheck" = "2600";
 };
-"buildConfigurationList" = "000000000000000000000094";
+"buildConfigurationList" = "00000000000000000000009B";
 "compatibilityVersion" = "Xcode 14.0";
 "developmentRegion" = "en";
 "isa" = "PBXProject";
@@ -1129,8 +1164,8 @@
 "productRefGroup" = "00000000000000000000000E";
 "projectDirPath" = "";
 "projectRoot" = "";
-"targets" = ("00000000000000000000002A", "000000000000000000000035", "000000000000000000000050", "000000000000000000000060", "00000000000000000000006B", "000000000000000000000086", "000000000000000000000091");
+"targets" = ("00000000000000000000002C", "000000000000000000000037", "000000000000000000000054", "000000000000000000000065", "000000000000000000000070", "00000000000000000000008D", "000000000000000000000098");
 };
 };
-"rootObject" = "000000000000000000000095";
+"rootObject" = "00000000000000000000009C";
 }
