@@ -33,6 +33,10 @@ import CadenzaPlayer
         try await player.play(entries: entries)
         try await player.next(); #expect(player.snapshot.resource?.id == entries[1].mediaID)
         try await player.previous(); #expect(player.snapshot.resource?.id == entries[0].mediaID)
+        try await player.play(entryID: entries[1].id)
+        try await player.previous(); #expect(player.queue.currentEntryID == entries[0].id)
+        await #expect(throws: CadenzaError.queueEntryNotFound) { try await player.play(entryID: UUID()) }
+        #expect(player.queue.currentEntryID == entries[0].id)
         try await player.seek(to: 3); try player.pause()
         #expect(player.snapshot.position == 3 && player.snapshot.state == .paused)
         try await player.resume()

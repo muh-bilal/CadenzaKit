@@ -2,6 +2,7 @@ import AppKit
 import AVFoundation
 import Foundation
 import Testing
+import MediaPlayer
 import CadenzaDomain
 import CadenzaPersistence
 import CadenzaAudioEngine
@@ -10,7 +11,7 @@ import CadenzaAudioEngine
 @Suite(.serialized) @MainActor
 struct DemoTests {
     final class Backend: PlaybackBackend {
-        let supportedFeatures: Set<Feature> = [.playback, .seeking]
+        var supportedFeatures: Set<Feature> = [.playback, .seeking]
         var playing = false, position = 0.0
         var failure: (any Error)?
         func load(_ resource: MediaResource) async throws -> Double {
@@ -29,6 +30,21 @@ struct DemoTests {
         func fail() { fails = true }
         func read() throws -> Data? { if fails { throw CadenzaError.corruptStore }; return data }
         func update(_ transform: @Sendable (Data?) throws -> Data?) throws -> Data? { data = try transform(data); return data }
+    }
+    final class Platform: SystemPlaybackController { func prepareForPlayback() {} }
+    @Test func phoneCommandsPublishAndClearSharedSystemState() async throws {
+        let backend = Backend(); backend.supportedFeatures.insert(.systemPlayback)
+        let directory = try directory(); defer { try? FileManager.default.removeItem(at: directory) }
+        let track = try DemoAudio.create(in: directory)[0]
+        let model = try DemoModel(tracks: [track], backend: backend, store: Store(),
+            features: .init(systemPlayback: true, carPlay: true), systemPlayback: Platform())
+        await model.perform(.select(0))
+        #expect(model.queue.snapshot.state == .playing)
+        #expect(MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyTitle] as? String == track.title)
+        await model.perform(.playPause)
+        #expect(MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] as? Double == 0)
+        await model.perform(.stop)
+        #expect(MPNowPlayingInfoCenter.default().nowPlayingInfo == nil)
     }
     func directory() throws -> URL {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)

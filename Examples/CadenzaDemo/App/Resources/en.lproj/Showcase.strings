@@ -49,3 +49,10 @@
 "Decrease" = "Decrease";
 "Increase" = "Increase";
 "Adjustments enable the equalizer. Reduce preamp when boosting bands to avoid clipping." = "Adjustments enable the equalizer. Reduce preamp when boosting bands to avoid clipping.";
+"Original demo audio" = "Original demo audio";
+"No music" = "No music";
+"Add tracks to your source" = "Add tracks to your source";
+"Playback unavailable" = "Playback unavailable";
+"CarPlay is disabled in this app." = "CarPlay is disabled in this app.";
+"System playback is disabled in this app." = "System playback is disabled in this app.";
+"Music is unavailable. Reconnect to try again." = "Music is unavailable. Reconnect to try again.";

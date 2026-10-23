@@ -105,3 +105,16 @@ SDK services have examples in the [integration guide](../../Documentation/Integr
 To change target settings or file membership, edit `GenerateProject.swift`, run
 `swift GenerateProject.swift` here, and commit the regenerated project. Build
 outputs and test results belong outside this tracked directory.
+
+## CarPlay
+
+The iOS target also hosts a CarPlay scene. Run it on an iPhone simulator, then open
+Simulator's **I/O → External Displays → CarPlay** display. Select CadenzaDemo and a
+track. The native list opens Now Playing using the same SDK player and queue as
+the phone UI. Disconnecting CarPlay preserves established playback.
+
+`App/iOS.plist` declares the CarPlay scene; `App/CarPlay.entitlements` declares
+`com.apple.developer.carplay-audio`. Real-device signing requires Apple's approved
+CarPlay audio capability and a matching profile. The macOS and tvOS targets do not
+request that entitlement. Native physical lock-screen controls and in-car hardware
+behavior remain device acceptance checks, not claims made by simulator results.

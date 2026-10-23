@@ -7,6 +7,9 @@ Compose local or HTTPS playback, queues, playlists, bookmarks, artwork, offline
 storage, and native equalization through independently selectable package products.
 Your app owns the UI; the SDK owns playback and service logic.
 
+Optional [CarPlay integration](Documentation/Integration.md#carplay-audio-apps)
+connects a host-provided catalog to the same player and native Now Playing controls.
+
 [Integration guide](Documentation/Integration.md) · [Xcode example apps](Examples/CadenzaDemo) · [Build and test](Documentation/Testing.md)
 
 Optional [SwiftUI components](Documentation/SwiftUI.md) provide configurable defaults

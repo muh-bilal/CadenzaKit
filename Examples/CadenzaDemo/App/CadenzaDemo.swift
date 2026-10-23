@@ -10,7 +10,7 @@ func demoText(_ key: String) -> String { NSLocalizedString(key, tableName: "Show
 
 @main
 struct CadenzaDemo: App {
-    @StateObject private var player = Showcase()
+    @StateObject private var player = Showcase.shared
     var body: some Scene {
         WindowGroup("CadenzaKit") { ShowcaseView(player: player) }
         #if os(macOS)
@@ -22,6 +22,8 @@ struct CadenzaDemo: App {
 /// Observes SDK objects; never duplicates playback or equalizer policy.
 @MainActor
 final class Showcase: ObservableObject {
+    static let shared = Showcase()
+    func reportCarPlayFailure(_ message: String) { failure = message }
     @Published private(set) var model: DemoModel?
     @Published private(set) var failure: String?
     @Published private(set) var revision = 0
@@ -62,7 +64,7 @@ final class Showcase: ObservableObject {
             store = try AtomicFileStore(fileURL: support)
             #endif
             let engine = AVAudioEngineBackend()
-            let model = try DemoModel(tracks: tracks, backend: engine, store: store, features: .init(systemPlayback: ProcessInfo.processInfo.environment["CADENZA_SYSTEM_PLAYBACK"] != "0", equalizer: true), systemPlayback: AppleSystemPlaybackController())
+            let model = try DemoModel(tracks: tracks, backend: engine, store: store, features: .init(systemPlayback: ProcessInfo.processInfo.environment["CADENZA_SYSTEM_PLAYBACK"] != "0", carPlay: true, equalizer: true), systemPlayback: AppleSystemPlaybackController())
             let equalizer = model.cadenza.makeEqualizer(backend: engine, store: try PreferencesDocumentStore(suiteName: "org.cadenzakit.showcase.equalizer", key: "presets"))
             return Services(model: model, equalizer: equalizer)
     }
@@ -111,13 +113,13 @@ final class Showcase: ObservableObject {
     }
 
     func setBackgrounded(_ value: Bool) {
-        model?.queue.setBackgrounded(value)
+        model?.player.setBackgrounded(value)
         revision += 1
     }
 
     func stop() {
         generation += 1; action?.cancel(); action = nil
-        model?.queue.stop(); busy = false; revision += 1
+        model?.player.stop(); busy = false; revision += 1
     }
 }
 

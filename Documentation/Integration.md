@@ -82,6 +82,7 @@ try await player.play(MediaID("track-42"))
 
 Retain the player at app scope. `pause`, `resume`, `seek`, `next`, `previous`, and
 `stop` delegate to the existing services; async command failures are thrown.
+Use `play(entryID:)` to select an existing queue occurrence while retaining history.
 Automatic refresh failures are exposed through `failure` and stop playback.
 System-command failures also populate `failure`, preserving the service-defined
 state (for example, a denied seek does not stop playback).
@@ -544,3 +545,51 @@ names are allowed, and listing sorts by name then ID. Use a dedicated document
 store, with bounded preferences storage for durable small tvOS presets. Preset
 operations additionally require `persistence`; direct settings do not. Native EQ
 tests measure actual PCM gain and bypass, not just configuration values.
+
+## CarPlay audio apps
+
+Select the optional `CadenzaCarPlay` product and initialize the shared facade with
+`FeatureFlags(systemPlayback: true, carPlay: true)`. Both flags default to false.
+`CarPlayLibrary` accepts an async host catalog; it never scrapes a service or owns
+credentials. Each `CarPlayTrack` includes display strings and a `QueueEntry` with
+a unique occurrence UUID, media ID, and optional source-provider identifier.
+Duplicate media IDs are supported; duplicate occurrence IDs are rejected.
+
+```swift
+import CadenzaCarPlay
+
+let library = CarPlayLibrary(player: player) {
+    try await myCatalog.carPlaySections()
+}
+try await library.reload()
+// Inside the iOS CarPlay scene delegate:
+let template = library.makeTemplate(
+    title: "Music", emptyTitle: "No music", emptySubtitle: "Add music to your library",
+    onPlaybackStarted: { /* Push CPNowPlayingTemplate.shared. */ },
+    onFailure: { error in /* Present a localized error. */ })
+// Set template as the CPInterfaceController root template.
+```
+
+Retain the library for the connected scene and call `disconnect()` when the scene
+disconnects. Pending catalog/selection tasks are cancelled; established playback
+continues on the shared player. Cancellation-ignoring providers cannot be forcibly
+terminated, but stale catalog results cannot replace the current catalog.
+Catalog errors propagate to the host; playback errors use the existing service
+errors. Selection checks fresh system/source policy and delegates queue creation,
+loading and playback to `CadenzaPlayer`. Backend/platform/output checks remain in
+its playback services. A competing catalog or selection operation is rejected.
+
+The native list-template adapter is iOS-only. Titles, subtitles and empty-state
+strings are host-supplied for localization. CarPlay owns accessibility, appearance,
+layout and list-size limits. This initial integration provides a sectioned track
+catalog and native Now Playing; search, Siri/voice intents, nested browsing and
+custom CarPlay queue buttons are not included.
+
+The example's `CarPlaySceneDelegate` shows scene lifecycle, native navigation,
+errors and sharing the same facade with the phone UI. Its iOS target contains the
+CarPlay audio entitlement and scene manifest. For physical-device installation,
+the host must obtain Apple's approved audio entitlement and a matching provisioning
+profile; the SDK cannot grant these. See Apple's
+[CarPlay entitlement setup](https://developer.apple.com/documentation/carplay/requesting-carplay-entitlements).
+CarPlay Now Playing consumes the same MediaPlayer metadata and commands described
+above; it does not create a separate playback engine.

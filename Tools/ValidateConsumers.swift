@@ -3,7 +3,7 @@ import Foundation
 // Verify that a host can select each product independently. No source generation
 // is checked into SDK targets; fixtures remain under ignored validation artifacts.
 let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-for product in ["CadenzaPlayer", "CadenzaSystemPlayback", "CadenzaDomain", "CadenzaKit", "CadenzaTesting", "CadenzaLocalSources", "CadenzaAVPlayback", "CadenzaPersistence", "CadenzaArtwork", "CadenzaRemoteSources", "CadenzaDownloads", "CadenzaAudioEngine", "CadenzaSwiftUI", "CadenzaPresentation"] {
+for product in ["CadenzaCarPlay", "CadenzaPlayer", "CadenzaSystemPlayback", "CadenzaDomain", "CadenzaKit", "CadenzaTesting", "CadenzaLocalSources", "CadenzaAVPlayback", "CadenzaPersistence", "CadenzaArtwork", "CadenzaRemoteSources", "CadenzaDownloads", "CadenzaAudioEngine", "CadenzaSwiftUI", "CadenzaPresentation"] {
     let directory = root.appendingPathComponent(".build/validation/Consumers/Consumer-\(product)")
     let sources = directory.appendingPathComponent("Sources/Consumer")
     try FileManager.default.createDirectory(at: sources, withIntermediateDirectories: true)

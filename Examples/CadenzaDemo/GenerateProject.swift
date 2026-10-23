@@ -26,6 +26,7 @@ let assets = file("App/DemoAssets.xcassets", "folder.assetcatalog")
 let translations = ["en", "de"].map { language in add(["isa": "PBXFileReference", "name": language, "path": "App/Resources/\(language).lproj/Showcase.strings", "sourceTree": "<group>", "lastKnownFileType": "text.plist.strings"]) }
 let localized = add(["isa": "PBXVariantGroup", "name": "Showcase.strings", "sourceTree": "<group>", "children": translations])
 let model = file("App/DemoModel.swift", "sourcecode.swift")
+let carPlay = file("App/CarPlayScene.swift", "sourcecode.swift")
 let unitSource = file("Tests/ShowcaseModelTests.swift", "sourcecode.swift")
 let modelTests = file("Tests/DemoModelTests.swift", "sourcecode.swift")
 var unitTarget: String?
@@ -33,7 +34,7 @@ let tests = file("UITests/ShowcaseTests.swift", "sourcecode.swift")
 let strings = file("App/Localizable.xcstrings", "text.json.xcstrings")
 let package = add(["isa": "XCLocalSwiftPackageReference", "relativePath": "../.."])
 let products = add(["isa": "PBXGroup", "name": "Products", "sourceTree": "<group>", "children": [String]()])
-let group = add(["isa": "PBXGroup", "sourceTree": "<group>", "children": [source, artwork, screen, model, strings, localized, assets, tests, unitSource, modelTests, products]])
+let group = add(["isa": "PBXGroup", "sourceTree": "<group>", "children": [source, artwork, screen, model, carPlay, strings, localized, assets, tests, unitSource, modelTests, products]])
 var targets: [String] = [], output: [String] = [], schemes: [(String, String, String)] = []
 for (platform, sdk, supported, family, deployment, version) in [
     ("iOS", "iphoneos", "iphoneos iphonesimulator", "1,2", "IPHONEOS_DEPLOYMENT_TARGET", "17.0"),
@@ -51,17 +52,20 @@ for (platform, sdk, supported, family, deployment, version) in [
     if platform == "iOS" {
         settings["INFOPLIST_KEY_UILaunchScreen_Generation"] = "YES"
         settings["INFOPLIST_KEY_UISupportedInterfaceOrientations"] = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
-        settings["INFOPLIST_KEY_UIApplicationSceneManifest_Generation"] = "YES"
     }
     if platform == "macOS" { settings["ENABLE_APP_SANDBOX"] = "YES" }
     if platform != "macOS" { settings["INFOPLIST_FILE"] = "App/BackgroundAudio.plist" }
+    if platform == "iOS" {
+        settings["INFOPLIST_FILE"] = "App/iOS.plist"
+        settings["CODE_SIGN_ENTITLEMENTS"] = "App/CarPlay.entitlements"
+    }
     let product = add(["isa": "PBXFileReference", "path": "\(name).app", "explicitFileType": "wrapper.application", "sourceTree": "BUILT_PRODUCTS_DIR"])
     output.append(product)
-    let dependencies = ["CadenzaPlayer", "CadenzaSystemPlayback", "CadenzaKit", "CadenzaDomain", "CadenzaLocalSources", "CadenzaAudioEngine", "CadenzaSwiftUI", "CadenzaPersistence"].map {
+    let dependencies = ["CadenzaCarPlay", "CadenzaPlayer", "CadenzaSystemPlayback", "CadenzaKit", "CadenzaDomain", "CadenzaLocalSources", "CadenzaAudioEngine", "CadenzaSwiftUI", "CadenzaPersistence"].map {
         add(["isa": "XCSwiftPackageProductDependency", "package": package, "productName": $0])
     }
     let frameworks = add(["isa": "PBXFrameworksBuildPhase", "buildActionMask": 2147483647, "files": dependencies.map { add(["isa": "PBXBuildFile", "productRef": $0]) }, "runOnlyForDeploymentPostprocessing": 0])
-    let app = add(["isa": "PBXNativeTarget", "name": name, "productName": name, "productReference": product, "productType": "com.apple.product-type.application", "buildConfigurationList": configs(settings), "buildPhases": [phase("PBXSourcesBuildPhase", [source, artwork, screen, model]), frameworks, phase("PBXResourcesBuildPhase", [strings, localized, assets])], "buildRules": [String](), "dependencies": [String](), "packageProductDependencies": dependencies])
+    let app = add(["isa": "PBXNativeTarget", "name": name, "productName": name, "productReference": product, "productType": "com.apple.product-type.application", "buildConfigurationList": configs(settings), "buildPhases": [phase("PBXSourcesBuildPhase", [source, artwork, screen, model, carPlay]), frameworks, phase("PBXResourcesBuildPhase", [strings, localized, assets])], "buildRules": [String](), "dependencies": [String](), "packageProductDependencies": dependencies])
     targets.append(app)
     if platform == "macOS" {
         var unitSettings = settings
@@ -76,6 +80,7 @@ for (platform, sdk, supported, family, deployment, version) in [
     }
     settings["PRODUCT_BUNDLE_IDENTIFIER"] = "org.cadenzakit.showcase.\(platform.lowercased()).uitests"
     settings.removeValue(forKey: "INFOPLIST_FILE")
+    settings.removeValue(forKey: "CODE_SIGN_ENTITLEMENTS")
     settings["TEST_TARGET_NAME"] = name; settings["ENABLE_APP_SANDBOX"] = "NO"
     let testProduct = add(["isa": "PBXFileReference", "path": "\(name)UITests.xctest", "explicitFileType": "wrapper.cfbundle", "sourceTree": "BUILT_PRODUCTS_DIR"])
     output.append(testProduct)

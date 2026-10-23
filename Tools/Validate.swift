@@ -90,6 +90,18 @@ for name in platforms where selectedPlatform == nil || selectedPlatform == name 
         "-enableCodeCoverage", "YES", "-derivedDataPath", artifacts.appendingPathComponent("DerivedData-\(name)").path,
         "-resultBundlePath", artifacts.appendingPathComponent("\(name).xcresult").path
     ], log: "\(name).log")
+    // This optional adapter contains iOS-only CarPlay template code. Its native
+    // lines must pass coverage on iPhone/iPad, not just the portable Mac build.
+    struct PlatformCoverage: Decodable {
+        struct Target: Decodable { let name: String; let lineCoverage: Double }
+        let targets: [Target]
+    }
+    let platformCoverage = try run(["xcrun", "xccov", "view", "--report", "--json",
+        artifacts.appendingPathComponent("\(name).xcresult").path], log: "\(name)-coverage.json")
+    let targets = try JSONDecoder().decode(PlatformCoverage.self, from: Data(platformCoverage.utf8)).targets
+    guard let carPlay = targets.first(where: { $0.name == "CadenzaCarPlay" }), carPlay.lineCoverage == 1 else {
+        throw ValidationFailure(message: "CarPlay adapter coverage is below 100% on \(name)")
+    }
 }
 try run(["git", "diff", "--check"], log: "diff-check.log")
 print("Validation passed; review the diff and evidence before committing.")

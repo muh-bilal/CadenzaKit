@@ -32,6 +32,7 @@ public struct FeatureFlags: Equatable, Sendable {
     public var downloads: Bool
     public var storageManagement: Bool
     public var systemPlayback: Bool
+    public var carPlay: Bool
     public var equalizer: Bool
 
     public init(
@@ -57,6 +58,7 @@ public struct FeatureFlags: Equatable, Sendable {
         downloads: Bool = false,
         storageManagement: Bool = false,
         systemPlayback: Bool = false,
+        carPlay: Bool = false,
         equalizer: Bool = false
     ) {
         self.sourceResolution = sourceResolution
@@ -81,6 +83,7 @@ public struct FeatureFlags: Equatable, Sendable {
         self.downloads = downloads
         self.storageManagement = storageManagement
         self.systemPlayback = systemPlayback
+        self.carPlay = carPlay
         self.equalizer = equalizer
     }
 

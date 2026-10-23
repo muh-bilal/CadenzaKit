@@ -49,3 +49,10 @@
 "Decrease" = "Verringern";
 "Increase" = "Erhöhen";
 "Adjustments enable the equalizer. Reduce preamp when boosting bands to avoid clipping." = "Änderungen aktivieren den Equalizer. Bei verstärkten Bändern die Vorverstärkung reduzieren, um Übersteuerung zu vermeiden.";
+"Original demo audio" = "Originale Demo-Musik";
+"No music" = "Keine Musik";
+"Add tracks to your source" = "Titel zur Quelle hinzufügen";
+"Playback unavailable" = "Wiedergabe nicht verfügbar";
+"CarPlay is disabled in this app." = "CarPlay ist in dieser App deaktiviert.";
+"System playback is disabled in this app." = "Die Systemwiedergabe ist in dieser App deaktiviert.";
+"Music is unavailable. Reconnect to try again." = "Musik ist nicht verfügbar. Verbinde dich erneut.";

@@ -64,6 +64,13 @@ public final class CadenzaPlayer {
         try await queue.playEntries(entries, startingAt: id)
     }
 
+    /// Select an existing queue occurrence without replacing queue history.
+    public func play(entryID: UUID) async throws {
+        defer { notify() }
+        failure = nil
+        try await queue.play(entryID)
+    }
+
     public func resume() async throws { defer { notify() }; try await queue.play() }
     public func pause() throws { defer { notify() }; try queue.pause() }
     public func seek(to position: Double) async throws { defer { notify() }; try await queue.seek(to: position) }

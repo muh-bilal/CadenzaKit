@@ -48,13 +48,13 @@ public final class DemoModel {
             switch command {
             case .select(let index):
                 guard queue.entries.indices.contains(index) else { throw CadenzaError.invalidQueueIndex }
-                try await queue.play(queue.entries[index].id)
+                try await player.play(entryID: queue.entries[index].id)
             case .playPause:
-                if queue.snapshot.state == .playing { try queue.pause() } else { try await queue.play() }
-            case .stop: queue.stop()
-            case .next: try await queue.next()
-            case .previous: try await queue.previous()
-            case .seek(let position): try await queue.seek(to: position)
+                if queue.snapshot.state == .playing { try player.pause() } else { try await player.resume() }
+            case .stop: player.stop()
+            case .next: try await player.next()
+            case .previous: try await player.previous()
+            case .seek(let position): try await player.seek(to: position)
             case .shuffle: try queue.setShuffle(!queue.isShuffleEnabled)
             case .repeatMode:
                 try queue.setRepeat(queue.repeatMode == .off ? .all : queue.repeatMode == .all ? .one : .off)
@@ -63,8 +63,8 @@ public final class DemoModel {
                 saved = try await bookmarks.save(id: Self.bookmarkID, mediaID: media.id, provider: "local", title: media.title, position: queue.snapshot.position)
             case .resumeBookmark:
                 guard let saved, let index = tracks.firstIndex(where: { $0.id == saved.mediaID }) else { throw CadenzaError.bookmarkNotFound }
-                try await queue.play(queue.entries[index].id)
-                try await queue.seek(to: min(saved.position, queue.snapshot.duration))
+                try await player.play(entryID: queue.entries[index].id)
+                try await player.seek(to: min(saved.position, queue.snapshot.duration))
             }
             message = command == .saveBookmark ? "Position saved. It will be here next time." : "Original demo audio · Local playback"
         } catch is CancellationError { message = "Operation cancelled." }

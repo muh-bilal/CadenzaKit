@@ -40,6 +40,7 @@ public struct MediaResource: Equatable, Sendable {
 }
 
 public enum CadenzaError: Error, Equatable, Sendable {
+    case carPlayDisabled
     case invalidIdentifier
     case duplicateProvider(String)
     case providerNotFound(String)
