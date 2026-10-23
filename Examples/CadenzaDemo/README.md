@@ -1,79 +1,94 @@
-# CadenzaDemo — macOS listening room
+# CadenzaKit Xcode examples
 
-For Xcode application targets on iPhone, iPad, macOS and Apple TV, open the
-[multiplatform showcase](../CadenzaShowcase). This directory retains the standalone
-macOS Swift Package executable and shared, tested demo model.
+Open **CadenzaDemo.xcodeproj** in Xcode 16 or later. It references the root
+Swift package by relative path. No published package or generator installation
+is needed.
 
-A small native AppKit application consuming CadenzaKit through a local Swift
-package dependency. Requires macOS 14+ and the Swift 6 toolchain. No signing team,
-credentials, network service or third-party project generator is needed.
+| Scheme | Destinations | Interface |
+| --- | --- | --- |
+| `CadenzaiOS` | iPhone and iPad, iOS 17+ | Compact phone player; iPad library/detail split |
+| `CadenzamacOS` | Native macOS 14+ | Resizable sidebar and player; no Catalyst |
+| `CadenzatvOS` | Apple TV, tvOS 17+ | Large player, focusable controls, remote Play/Pause |
 
-From the repository root:
+Choose a scheme and simulator or **My Mac**, then Run. For a physical device,
+select your development team in Signing & Capabilities. No team ID is checked in.
+
+## CadenzaKit owns the behavior
+
+`App/DemoPlayerScreen.swift` composes the optional `CadenzaSwiftUI` player.
+`App/CadenzaDemo.swift` handles app lifecycle and service composition.
+The project compiles `App/DemoModel.swift` for all three platform targets:
+
+- `Cadenza` configures the source provider and creates SDK services.
+- `LocalFileSource` resolves demo tracks; `AVAudioEngineBackend` plays them and supplies native equalizer DSP.
+- `PlaybackQueue` owns transport state, seeking, EOF advancement, history, shuffle
+  and repeat. The UI reads its snapshot directly.
+- `BookmarkService` saves and restores positions. iOS/macOS use `AtomicFileStore`;
+  tvOS uses `PreferencesDocumentStore`, independent of purgeable cached audio.
+- SDK errors are displayed. The app serializes commands; Stop cancels the active
+  command and stops the SDK queue.
+
+Choose a track, seek forward, save its position, close and reopen the app, then
+select **Resume saved**. The apps refresh SDK progress while visible and stop
+when entering the background. There is no background-audio entitlement or system
+Now Playing integration.
+
+Controls use SF Symbols, accessible labels, system fonts, light/dark appearance,
+and English/German localization. Track titles are original media metadata; SDK
+error diagnostics remain verbatim. iPad split view adapts to compact windows.
+
+## Default, Empty, and customization
+
+**Default** presents the reference-inspired player: warm neutral surfaces, green
+transport controls, original album covers, and platform-adaptive composition.
+Phone uses a vertical player, iPad an album grid with a player column, Mac a
+library/list with a player column, and TV a spacious horizontal player.
+
+**Empty** removes all SDK player content without replacing or stopping the
+CadenzaKit session. The small example-owned layout selector remains available.
+Switch back to Default to resume interacting with the same queue and position.
+
+**Customize** changes title size, light/dark accent colors, Play/Pause image
+assets, localized labels, or the complete button implementation. Reset restores
+the defaults. The demo controls a subset of the API; hosts can replace every
+section or the whole layout through `PlayerComponents`, and configure fonts,
+colors, dimensions, image/text resolvers and actions through `PlayerContext`.
+See the [SwiftUI integration guide](../../Documentation/SwiftUI.md).
+
+**Equalizer** applies a real warm-bass setting through `EqualizerService`, or
+bypasses DSP. Capability enforcement and playback state remain in CadenzaKit.
+The example does not claim the concept artwork's fictional music, lyrics,
+output routes or high-resolution audio metadata are implemented services.
+
+## Audio and artwork
+
+Four original synthesized arpeggios are generated in the app cache at launch.
+They belong to the examples and are dedicated to **CC0-1.0**, together with
+the original procedural covers and example-only Play/Pause image assets.
+`GenerateAssets.swift` regenerates those image assets using Apple drawing APIs. No media, artwork,
+fonts or custom icons are added to SDK products. Playback uses system output
+volume. No network access is required.
+
+Set `CADENZA_DEMO_CACHE_DIRECTORY` in the scheme environment to override the
+generated-audio directory. Invalid or unwritable locations produce a visible
+startup error; bookmark storage remains in the app's normal persistent store.
+
+## Tests and maintenance
+
+Each shared scheme includes a UI test exercising real AVAudioEngine playback, queue
+navigation, shuffle/repeat, seeking, saving and resume across relaunch. Apple TV
+uses directional remote events and Select. Run the iOS scheme on both iPhone and
+iPad. The shared model also has deterministic and real-adapter tests:
 
 ```sh
-swift run --package-path Examples/CadenzaDemo CadenzaDemo
+xcodebuild test -project CadenzaDemo.xcodeproj -scheme CadenzamacOS \
+  -destination 'platform=macOS' CODE_SIGN_IDENTITY=-
 ```
 
-Or build a local `.app` bundle:
+Simulator tests do not establish physical audio routes, VoiceOver quality or Siri
+Remote hardware behavior. The demo presents local playback, bookmarks, equalizer and customizable UI; other
+SDK services have examples in the [integration guide](../../Documentation/Integration.md).
 
-```sh
-cd Examples/CadenzaDemo
-swift BuildApp.swift
-open .build/CadenzaDemo.app
-```
-
-If your active developer directory points only to Command Line Tools, prefix
-commands with `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`.
-The helper produces a development build with coverage instrumentation; it is not
-a signed/notarized distribution archive. Quit with Command-Q or the app menu.
-
-## Try it
-
-1. Choose one of the four original arpeggios. The real AVPlayer backend plays it.
-2. Pause/resume, seek with the position slider, or select another track.
-3. Toggle shuffle and cycle repeat through off/all/one. EOF advances the queue.
-4. Save a position, quit, relaunch, and choose **Resume bookmark**.
-5. Resize the window or use your system's light/dark appearance. Controls expose
-   accessibility labels and use SF Symbols.
-
-The demo does not autoplay at launch. Each synthesized sketch is 24 seconds long
-at a modest signal amplitude; playback uses your current system output volume.
-The example demonstrates the implemented core SDK, not the planned full showcase
-family: it has no system Now Playing/remote commands, background audio integration,
-file import, lyrics, downloads UI, EQ UI or playlist editor. It is macOS-only and
-does not implement system playback integration or physical remote-control support.
-
-## Where the SDK is used
-
-- `DemoModel.swift`: constructs a `LocalFileSource`, configures the `Cadenza` facade,
-  injects a playback backend/document store, and creates the queue/bookmark services.
-  Commands call SDK services; the UI does not implement queue policy or persistence.
-- `DemoWindow.swift`: native presentation and controls; serializes user commands
-  against the 200 ms progress refresh to avoid overlapping playback operations.
-- `DemoApplication.swift`: composes the real AVPlayer and atomic-file adapters,
-  owns the window lifetime, and supplies the application event loop.
-- `DemoAudio.create`: generates original audio into the example app's cache. No
-  example audio, artwork or UI is bundled in any SDK product.
-
-Generated media is stored in `~/Library/Caches/CadenzaDemo`. The single saved
-position is stored in `~/Library/Application Support/CadenzaDemo/bookmarks.json`.
-Only this example's own demo files are regenerated on launch. Test runs use
-temporary directories and injected playback/storage dependencies.
-
-## Test
-
-```sh
-swift test --package-path Examples/CadenzaDemo --enable-code-coverage
-```
-
-Tests cover actual generated audio through AVPlayer, durable resume after service
-recreation, all commands, EOF, failures/cancellation, bootstrap/storage errors,
-native target/action dispatch, accessibility labels and light/dark view rendering.
-
-## Media license
-
-The generated arpeggios are original mathematical signals authored for this
-example and dedicated to the public domain under **CC0 1.0**:
-https://creativecommons.org/publicdomain/zero/1.0/
-Track titles are fictional. SF Symbols are provided by the OS. This media dedication
-does not choose or change the repository's software distribution license.
+To change target settings or file membership, edit `GenerateProject.swift`, run
+`swift GenerateProject.swift` here, and commit the regenerated project. Build
+outputs and test results belong outside this tracked directory.

@@ -7,7 +7,7 @@ Compose local or HTTPS playback, queues, playlists, bookmarks, artwork, offline
 storage, and native equalization through independently selectable package products.
 Your app owns the UI; the SDK owns playback and service logic.
 
-[Integration guide](Documentation/Integration.md) · [Xcode example apps](Examples/CadenzaShowcase)
+[Integration guide](Documentation/Integration.md) · [Xcode example apps](Examples/CadenzaDemo)
 
 Optional [SwiftUI components](Documentation/SwiftUI.md) provide configurable defaults
 and full component/layout replacement without coupling UI to playback services.
@@ -45,17 +45,11 @@ Pass an accessible local audio URL and retain the returned session. Your app dri
 [integration guide](Documentation/Integration.md) for feature flags, optional
 products, persistence, capability checks, and complete usage examples.
 
-Open `Examples/CadenzaShowcase/CadenzaShowcase.xcodeproj` and select `CadenzaiOS`
+Open `Examples/CadenzaDemo/CadenzaDemo.xcodeproj` and select `CadenzaiOS`
 (iPhone/iPad), `CadenzamacOS`, or `CadenzatvOS`. Each app uses this checkout's
 CadenzaKit package for playback, queue behavior, saved positions and equalization.
 Choose **Default** for the supplied player layout, **Empty** for a blank SDK view,
 or **Customize** to change fonts, colors, assets, labels and button implementations.
-
-The standalone macOS package demo is also available:
-
-```sh
-swift run --package-path Examples/CadenzaDemo CadenzaDemo
-```
 
 ## Screenshots
 

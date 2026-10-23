@@ -8,7 +8,7 @@ import CadenzaPersistence
 func demoText(_ key: String) -> String { NSLocalizedString(key, tableName: "Showcase", comment: "") }
 
 @main
-struct CadenzaShowcase: App {
+struct CadenzaDemo: App {
     var body: some Scene {
         WindowGroup("CadenzaKit") { ShowcaseView() }
         #if os(macOS)

@@ -19,20 +19,21 @@ func configs(_ settings: [String: Any]) -> String {
     }
     return add(["isa": "XCConfigurationList", "buildConfigurations": values, "defaultConfigurationIsVisible": 0, "defaultConfigurationName": "Release"])
 }
-let source = file("App/CadenzaShowcase.swift", "sourcecode.swift")
+let source = file("App/CadenzaDemo.swift", "sourcecode.swift")
 let artwork = file("App/DemoArtwork.swift", "sourcecode.swift")
 let screen = file("App/DemoPlayerScreen.swift", "sourcecode.swift")
 let assets = file("App/DemoAssets.xcassets", "folder.assetcatalog")
 let translations = ["en", "de"].map { language in add(["isa": "PBXFileReference", "name": language, "path": "App/Resources/\(language).lproj/Showcase.strings", "sourceTree": "<group>", "lastKnownFileType": "text.plist.strings"]) }
 let localized = add(["isa": "PBXVariantGroup", "name": "Showcase.strings", "sourceTree": "<group>", "children": translations])
-let model = file("../CadenzaDemo/Sources/DemoCore/DemoModel.swift", "sourcecode.swift")
+let model = file("App/DemoModel.swift", "sourcecode.swift")
 let unitSource = file("Tests/ShowcaseModelTests.swift", "sourcecode.swift")
+let modelTests = file("Tests/DemoModelTests.swift", "sourcecode.swift")
 var unitTarget: String?
 let tests = file("UITests/ShowcaseTests.swift", "sourcecode.swift")
 let strings = file("App/Localizable.xcstrings", "text.json.xcstrings")
 let package = add(["isa": "XCLocalSwiftPackageReference", "relativePath": "../.."])
 let products = add(["isa": "PBXGroup", "name": "Products", "sourceTree": "<group>", "children": [String]()])
-let group = add(["isa": "PBXGroup", "sourceTree": "<group>", "children": [source, artwork, screen, model, strings, localized, assets, tests, unitSource, products]])
+let group = add(["isa": "PBXGroup", "sourceTree": "<group>", "children": [source, artwork, screen, model, strings, localized, assets, tests, unitSource, modelTests, products]])
 var targets: [String] = [], output: [String] = [], schemes: [(String, String, String)] = []
 for (platform, sdk, supported, family, deployment, version) in [
     ("iOS", "iphoneos", "iphoneos iphonesimulator", "1,2", "IPHONEOS_DEPLOYMENT_TARGET", "17.0"),
@@ -42,7 +43,7 @@ for (platform, sdk, supported, family, deployment, version) in [
     let name = "Cadenza\(platform)"
     var settings: [String: Any] = ["SWIFT_EMIT_LOC_STRINGS": "NO", "SWIFT_VERSION": "6.0", "SDKROOT": sdk, "SUPPORTED_PLATFORMS": supported,
         deployment: version, "PRODUCT_NAME": "$(TARGET_NAME)", "GENERATE_INFOPLIST_FILE": "YES",
-        "INFOPLIST_KEY_CFBundleDisplayName": "CadenzaKit", "MARKETING_VERSION": "1.0", "CURRENT_PROJECT_VERSION": "1",
+        "INFOPLIST_KEY_CFBundleDisplayName": "CadenzaDemo", "MARKETING_VERSION": "1.0", "CURRENT_PROJECT_VERSION": "1",
         "PRODUCT_BUNDLE_IDENTIFIER": "org.cadenzakit.showcase.\(platform.lowercased())", "CODE_SIGN_STYLE": "Automatic",
         "ENABLE_TESTABILITY": "YES", "SWIFT_STRICT_CONCURRENCY": "complete", "SUPPORTS_MACCATALYST": "NO",
         "INFOPLIST_KEY_LSApplicationCategoryType": "public.app-category.music"]
@@ -69,7 +70,7 @@ for (platform, sdk, supported, family, deployment, version) in [
         let unitProduct = add(["isa": "PBXFileReference", "path": "ShowcaseModelTests.xctest", "explicitFileType": "wrapper.cfbundle", "sourceTree": "BUILT_PRODUCTS_DIR"])
         output.append(unitProduct)
         let unitFrameworks = add(["isa": "PBXFrameworksBuildPhase", "buildActionMask": 2147483647, "files": dependencies.map { add(["isa": "PBXBuildFile", "productRef": $0]) }, "runOnlyForDeploymentPostprocessing": 0])
-        let unit = add(["isa": "PBXNativeTarget", "name": "ShowcaseModelTests", "productName": "ShowcaseModelTests", "productReference": unitProduct, "productType": "com.apple.product-type.bundle.unit-test", "buildConfigurationList": configs(unitSettings), "buildPhases": [phase("PBXSourcesBuildPhase", [unitSource]), unitFrameworks], "buildRules": [String](), "dependencies": [add(["isa": "PBXTargetDependency", "target": app])], "packageProductDependencies": dependencies])
+        let unit = add(["isa": "PBXNativeTarget", "name": "ShowcaseModelTests", "productName": "ShowcaseModelTests", "productReference": unitProduct, "productType": "com.apple.product-type.bundle.unit-test", "buildConfigurationList": configs(unitSettings), "buildPhases": [phase("PBXSourcesBuildPhase", [unitSource, modelTests]), unitFrameworks], "buildRules": [String](), "dependencies": [add(["isa": "PBXTargetDependency", "target": app])], "packageProductDependencies": dependencies])
         targets.append(unit); unitTarget = unit
     }
     settings["PRODUCT_BUNDLE_IDENTIFIER"] = "org.cadenzakit.showcase.\(platform.lowercased()).uitests"
@@ -87,12 +88,12 @@ func encode(_ value: Any) -> String {
     if let s = value as? String { return "\"" + s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\"" }
     return "\(value)"
 }
-let path = "CadenzaShowcase.xcodeproj"
+let path = "CadenzaDemo.xcodeproj"
 try FileManager.default.createDirectory(atPath: "\(path)/xcshareddata/xcschemes", withIntermediateDirectories: true)
 try ("// !$*UTF8*$!\n" + encode(["archiveVersion": 1, "classes": [String: String](), "objectVersion": 56, "objects": objects, "rootObject": project])).write(toFile: "\(path)/project.pbxproj", atomically: true, encoding: .utf8)
 for (name, app, test) in schemes {
     func ref(_ id: String, _ target: String, _ product: String) -> String {
-        "<BuildableReference BuildableIdentifier=\"primary\" BlueprintIdentifier=\"\(id)\" BuildableName=\"\(product)\" BlueprintName=\"\(target)\" ReferencedContainer=\"container:CadenzaShowcase.xcodeproj\"/>"
+        "<BuildableReference BuildableIdentifier=\"primary\" BlueprintIdentifier=\"\(id)\" BuildableName=\"\(product)\" BlueprintName=\"\(target)\" ReferencedContainer=\"container:CadenzaDemo.xcodeproj\"/>"
     }
     let appRef = ref(app, name, "\(name).app"), testRef = ref(test, "\(name)UITests", "\(name)UITests.xctest")
     let unitRef = name == "CadenzamacOS" ? "<TestableReference skipped=\"NO\">\(ref(unitTarget!, "ShowcaseModelTests", "ShowcaseModelTests.xctest"))</TestableReference>" : ""

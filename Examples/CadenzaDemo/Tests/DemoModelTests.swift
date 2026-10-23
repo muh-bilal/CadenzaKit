@@ -4,8 +4,8 @@ import Foundation
 import Testing
 import CadenzaDomain
 import CadenzaPersistence
-import CadenzaAVPlayback
-@testable import DemoCore
+import CadenzaAudioEngine
+@testable import CadenzamacOS
 
 @Suite(.serialized) @MainActor
 struct DemoTests {
@@ -43,13 +43,13 @@ struct DemoTests {
         let audio = try AVAudioFile(forReading: tracks[0].url)
         #expect(audio.length == 24 * 22_050)
         let storeURL = directory.appendingPathComponent("bookmarks.json")
-        let model = try DemoModel(tracks: tracks, backend: AVPlayerBackend(), store: AtomicFileStore(fileURL: storeURL))
+        let model = try DemoModel(tracks: tracks, backend: AVAudioEngineBackend(), store: AtomicFileStore(fileURL: storeURL))
         await model.restore(); await model.perform(.select(0))
         #expect(model.queue.snapshot.state == .playing)
         await model.perform(.seek(5)); await model.perform(.saveBookmark)
         #expect(model.saved?.position == 5)
         await model.perform(.stop)
-        let reopened = try DemoModel(tracks: tracks, backend: AVPlayerBackend(), store: AtomicFileStore(fileURL: storeURL))
+        let reopened = try DemoModel(tracks: tracks, backend: AVAudioEngineBackend(), store: AtomicFileStore(fileURL: storeURL))
         await reopened.restore(); await reopened.perform(.resumeBookmark)
         #expect(reopened.queue.snapshot.resource?.id == tracks[0].id)
         #expect(abs(reopened.queue.snapshot.position - 5) < 0.1)
@@ -88,53 +88,4 @@ struct DemoTests {
         #expect(throws: (any Error).self) { try DemoAudio.create(in: missing) }
     }
 
-    @Test func applicationBootstrapAndStorageFailure() throws {
-        let directory = try directory(); defer { try? FileManager.default.removeItem(at: directory) }
-        var entered = false
-        try DemoApplication.run(directory: directory) { entered = true }
-        #expect(entered)
-        let file = directory.appendingPathComponent("not-a-directory")
-        try Data().write(to: file)
-        #expect(throws: (any Error).self) { try DemoApplication.run(directory: file) { Issue.record("Must not run after storage failure") } }
-    }
-
-    @Test func nativeControlsDriveSDKAndAdaptToLightDarkAndWindowSize() async throws {
-        _ = NSApplication.shared
-        let directory = try directory(); defer { try? FileManager.default.removeItem(at: directory) }
-        let model = try DemoModel(tracks: DemoAudio.create(in: directory), backend: Backend(), store: Store())
-        let ui = DemoWindow(model: model)
-        ui.start(); await ui.pending?.value
-        #expect(!ui.position.isEnabled)
-        let first = ui.buttons.first { $0.title.contains("After the light") }!
-        #expect(NSApplication.shared.sendAction(first.action!, to: first.target, from: first))
-        await ui.pending?.value
-        #expect(model.queue.snapshot.state == .playing)
-        #expect(ui.position.isEnabled)
-        ui.position.doubleValue = 4; ui.seek(ui.position); await ui.pending?.value
-        #expect(model.queue.snapshot.position == 4)
-        for name in ["Save position", "Resume bookmark", "Shuffle", "Repeat: off", "Pause", "Play", "Next", "Previous", "Stop"] {
-            let button = try #require(ui.buttons.first { $0.title == name })
-            #expect(button.accessibilityLabel() != nil)
-            #expect(NSApplication.shared.sendAction(button.action!, to: button.target, from: button)); await ui.pending?.value
-        }
-        ui.tick(); ui.tick(); await ui.pending?.value
-        ui.dispatch(.select(0)); ui.dispatch(.next); await ui.pending?.value
-        #expect(model.queue.snapshot.resource?.title == "After the light")
-        for appearance in [NSAppearance.Name.aqua, .darkAqua] {
-            ui.window.appearance = NSAppearance(named: appearance)
-            ui.window.setContentSize(NSSize(width: 1040, height: 700))
-            let view = try #require(ui.window.contentView)
-            view.layoutSubtreeIfNeeded()
-            let bitmap = try #require(view.bitmapImageRepForCachingDisplay(in: view.bounds))
-            view.cacheDisplay(in: view.bounds, to: bitmap)
-            #expect(bitmap.pixelsWide >= 1040)
-            let destination = ProcessInfo.processInfo.environment["CADENZA_SCREENSHOTS"]
-            if let destination {
-                let url = URL(fileURLWithPath: destination).appendingPathComponent(appearance == .aqua ? "demo-mac-light.png" : "demo-mac-dark.png")
-                try bitmap.representation(using: .png, properties: [:])!.write(to: url)
-            }
-        }
-        ui.window.close()
-        #expect(model.queue.snapshot.state == .idle)
-    }
 }

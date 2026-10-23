@@ -1,6 +1,6 @@
 # CadenzaKit integration guide
 
-[Overview and screenshots](../README.md) · [Run the Xcode example apps](../Examples/CadenzaShowcase/README.md)
+[Overview and screenshots](../README.md) · [Run the Xcode example apps](../Examples/CadenzaDemo/README.md)
 
 [Optional customizable SwiftUI player](SwiftUI.md): use the default skin, override
 design tokens/assets/text/components, or supply a completely empty/custom layout.
