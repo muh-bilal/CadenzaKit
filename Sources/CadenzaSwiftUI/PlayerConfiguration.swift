@@ -34,6 +34,7 @@ public enum PlayerText: String, CaseIterable, Sendable {
     case shuffleOn = "Shuffle on", shuffleOff = "Shuffle off"
     case repeatOff = "Repeat off", repeatAll = "Repeat all", repeatOne = "Repeat one"
     case queue = "Up next", equalizer = "Equalizer"
+    case spectrum = "Audio spectrum"
     case position = "Playback position", artwork = "Album artwork"
 }
 

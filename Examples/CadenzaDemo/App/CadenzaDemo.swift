@@ -31,6 +31,9 @@ final class Showcase: ObservableObject {
     @Published private(set) var soundMessage = ""
     @Published private(set) var soundSettings = EqualizerSettings()
     @Published private(set) var soundBusy = false
+    @Published private(set) var isBackgrounded = false
+    @Published private(set) var spectrum = SpectrumFrame()
+    @Published private(set) var spectrumFailure: String?
     private var equalizer: EqualizerService?
     private(set) var action: Task<Void, Never>?
     struct Services { let model: DemoModel; let equalizer: EqualizerService }
@@ -64,7 +67,7 @@ final class Showcase: ObservableObject {
             store = try AtomicFileStore(fileURL: support)
             #endif
             let engine = AVAudioEngineBackend()
-            let model = try DemoModel(tracks: tracks, backend: engine, store: store, features: .init(systemPlayback: ProcessInfo.processInfo.environment["CADENZA_SYSTEM_PLAYBACK"] != "0", carPlay: true, equalizer: true), systemPlayback: AppleSystemPlaybackController())
+            let model = try DemoModel(tracks: tracks, backend: engine, store: store, features: .init(systemPlayback: ProcessInfo.processInfo.environment["CADENZA_SYSTEM_PLAYBACK"] != "0", carPlay: true, spectrum: true, equalizer: true), systemPlayback: AppleSystemPlaybackController())
             let equalizer = model.cadenza.makeEqualizer(backend: engine, store: try PreferencesDocumentStore(suiteName: "org.cadenzakit.showcase.equalizer", key: "presets"))
             return Services(model: model, equalizer: equalizer)
     }
@@ -112,12 +115,28 @@ final class Showcase: ObservableObject {
         } catch { soundMessage = String(describing: error) }
     }
 
+    func sampleSpectrum() async {
+        guard let model else { return }
+        do {
+            let frame = try await model.player.readSpectrum()
+            if frame != spectrum { spectrum = frame }
+            if spectrumFailure != nil { spectrumFailure = nil }
+        }
+        catch is CancellationError { spectrum = SpectrumFrame() }
+        catch { spectrum = SpectrumFrame(); spectrumFailure = String(describing: error) }
+    }
+
+    func stopSpectrum() { model?.player.stopSpectrum(); spectrum = SpectrumFrame() }
+
     func setBackgrounded(_ value: Bool) {
+        isBackgrounded = value
+        stopSpectrum()
         model?.player.setBackgrounded(value)
         revision += 1
     }
 
     func stop() {
+        stopSpectrum()
         generation += 1; action?.cancel(); action = nil
         model?.player.stop(); busy = false; revision += 1
     }

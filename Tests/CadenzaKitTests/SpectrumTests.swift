@@ -5,6 +5,8 @@ import CadenzaDomain
 import CadenzaKit
 import CadenzaAVPlayback
 import CadenzaTesting
+import CadenzaPlayer
+import CadenzaLocalSources
 @testable import CadenzaAudioEngine
 
 @MainActor
@@ -159,5 +161,58 @@ extension SpectrumTests {
         let dishonest = PlaybackTests.Backend(); dishonest.supportedFeatures = [.spectrum]
         let ordinary = try PlaybackTests().kit(flags: .init(spectrum: true), features: [.spectrum]).makeSpectrum(backend: dishonest)
         await #expect(throws: CadenzaError.featureUnavailable(.spectrum, .backend)) { try await ordinary.read() }
+    }
+}
+
+extension SpectrumTests {
+    @Test func facadeUsesPlaybackBackendAndClearsAcrossTransportAndBackground() async throws {
+        let media = try LocalPlaybackIntegrationTests().fixture()
+        defer { try? FileManager.default.removeItem(at: media.url) }
+        let source = try CadenzaLocalSources.LocalFileSource(resources: [media.id: media])
+        let backend = AVAudioEngineBackend(output: .manual)
+        let player = try CadenzaPlayer(source: source, features: .init(spectrum: true), backend: backend)
+        defer { player.stop() }
+        #expect(try await player.readSpectrum() == SpectrumFrame())
+        try await player.play(media.id)
+        #expect(try await player.readSpectrum() == SpectrumFrame())
+        _ = try backend.render(frames: 1024)
+        #expect(try await player.readSpectrum().levels.max()! > 0)
+        try player.pause()
+        #expect(try await player.readSpectrum() == SpectrumFrame())
+        try await player.resume()
+        #expect(try await player.readSpectrum() == SpectrumFrame())
+        _ = try backend.render(frames: 1024)
+        #expect(try await player.readSpectrum().levels.max()! > 0)
+        try await player.seek(to: 0.1)
+        #expect(try await player.readSpectrum() == SpectrumFrame())
+        player.setBackgrounded(true)
+        #expect(try await player.readSpectrum() == SpectrumFrame())
+        player.setBackgrounded(false)
+        try await player.resume()
+        _ = try await player.readSpectrum()
+        _ = try backend.render(frames: 1024)
+        #expect(try await player.readSpectrum().levels.max()! > 0)
+        player.stopSpectrum()
+        #expect(backend.spectrum() == SpectrumFrame())
+        player.stop()
+        #expect(try await player.readSpectrum() == SpectrumFrame())
+    }
+}
+
+extension SpectrumTests {
+    @Test func facadeUsesCurrentProviderAndRejectsDisabledAnalysis() async throws {
+        let media = try LocalPlaybackIntegrationTests().fixture()
+        defer { try? FileManager.default.removeItem(at: media.url) }
+        let source = try LocalFileSource(resources: [media.id: media])
+        let other = ClosureSourceProvider(identifier: "restricted", supportedFeatures: [.sourceResolution, .playback, .seeking]) { _ in media }
+        let backend = AVAudioEngineBackend(output: .manual)
+        let player = try CadenzaPlayer(source: source, additionalSources: [other], features: .init(spectrum: true), backend: backend)
+        try await player.play(media.id, provider: "restricted")
+        await #expect(throws: CadenzaError.featureUnavailable(.spectrum, .source)) { try await player.readSpectrum() }
+        player.stop()
+        let disabled = try CadenzaPlayer(source: source, backend: backend)
+        try await disabled.play(media.id)
+        await #expect(throws: CadenzaError.featureUnavailable(.spectrum, .disabled)) { try await disabled.readSpectrum() }
+        disabled.stop()
     }
 }

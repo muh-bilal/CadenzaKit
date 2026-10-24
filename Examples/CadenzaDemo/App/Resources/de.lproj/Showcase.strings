@@ -56,3 +56,6 @@
 "CarPlay is disabled in this app." = "CarPlay ist in dieser App deaktiviert.";
 "System playback is disabled in this app." = "Die Systemwiedergabe ist in dieser App deaktiviert.";
 "Music is unavailable. Reconnect to try again." = "Musik ist nicht verfügbar. Verbinde dich erneut.";
+"Spectrum motion reduced" = "Spektrumbewegung reduziert";
+"Live audio spectrum" = "Live-Audiospektrum";
+"Spectrum idle" = "Spektrum inaktiv";

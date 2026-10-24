@@ -396,3 +396,30 @@ final class ShowcaseTests: XCTestCase {
     }
     #endif
 }
+
+extension ShowcaseTests {
+    @MainActor func testLiveSpectrumFollowsPlaybackAndSoundPanel() {
+        let app = application(); app.launch()
+        let spectrum = app.descendants(matching: .any).matching(identifier: "audio-spectrum").firstMatch
+        XCTAssertTrue(spectrum.waitForExistence(timeout: 10))
+        XCTAssertLessThanOrEqual(spectrum.frame.maxY, app.windows.firstMatch.frame.maxY, "Spectrum must fit in the visible player")
+        waitLabel("Spectrum idle", on: app.staticTexts["spectrum-state"])
+        activate(app.buttons["playPause"])
+        waitLabel("Pause", on: app.buttons["playPause"])
+        waitLabel("Live audio spectrum", on: app.staticTexts["spectrum-state"])
+        let live = XCTAttachment(screenshot: app.screenshot())
+        live.name = "Measured audio spectrum during playback"; live.lifetime = .keepAlways; add(live)
+        activate(app.buttons["playPause"])
+        waitLabel("Spectrum idle", on: app.staticTexts["spectrum-state"])
+        activate(app.buttons["equalizer"])
+        XCTAssertTrue(spectrum.exists)
+        activate(app.buttons["warm-bass"])
+        waitLabel("Equalizer enabled", on: app.staticTexts["sound-state"])
+        dismissPanel(in: app)
+        activate(app.buttons["playPause"])
+        waitLabel("Live audio spectrum", on: app.staticTexts["spectrum-state"])
+        activate(app.buttons["queue"])
+        activate(app.buttons["stop"])
+        waitLabel("Spectrum idle", on: app.staticTexts["spectrum-state"])
+    }
+}

@@ -625,3 +625,10 @@ No callbacks spawn tasks or enqueue unbounded work. Pause, seek, stop, reload an
 disable discard buffered samples; detached callbacks retain an obsolete mailbox
 and cannot repopulate the current one. Offline rendering analyzes the actual
 rendered PCM using the same FFT path. No capture or FFT occurs until enabled.
+
+The optional `CadenzaPlayer` facade exposes `readSpectrum()` and `stopSpectrum()`
+using its retained playback backend and current queue provider. Reads return a
+zero frame while inactive/backgrounded; active reads enforce the spectrum flag
+and capabilities. Transport commands and teardown invalidate active observation.
+The facade owns no high-frequency timer: a visible host samples sequentially and
+calls `stopSpectrum()` on disappearance. See the [SwiftUI example](SwiftUI.md#measured-audio-spectrum).

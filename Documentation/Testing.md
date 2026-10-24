@@ -103,3 +103,10 @@ profile; see the [example setup](../Examples/CadenzaDemo/README.md#carplay).
 Repository maintenance instructions are in [AGENTS.md](../AGENTS.md).
 
 Workflow trigger and filter behavior follows [GitHub's workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax).
+
+For spectrum changes, also select
+`ShowcaseTests/testLiveSpectrumFollowsPlaybackAndSoundPanel` on each demo scheme.
+It checks visible placement, playing/paused/stopped state and the shared EQ panel.
+SDK tests separately verify real post-EQ PCM gain, frequency bands, cancellation,
+capability revocation and rendered custom/reduced-motion views; UI labels alone
+are not evidence of working audio analysis.

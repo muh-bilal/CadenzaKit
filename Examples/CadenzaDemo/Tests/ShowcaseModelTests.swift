@@ -1,6 +1,7 @@
 import XCTest
 import CadenzaDomain
 import CadenzaKit
+import CadenzaAudioEngine
 @testable import CadenzamacOS
 
 @MainActor final class ShowcaseModelTests: XCTestCase {
@@ -88,5 +89,31 @@ import CadenzaKit
         controller.stop()
         let failed = Showcase { throw CadenzaError.corruptStore }
         await failed.start(); XCTAssertNotNil(failed.failure)
+    }
+}
+
+extension ShowcaseModelTests {
+    func testSpectrumReflectsSharedEngineAndClearsOnStop() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let backend = CadenzaAudioEngine.AVAudioEngineBackend(output: .manual), store = Store()
+        let model = try DemoModel(tracks: DemoAudio.create(in: directory), backend: backend, store: store, features: .init(spectrum: true, equalizer: true))
+        let controller = Showcase { .init(model: model, equalizer: model.cadenza.makeEqualizer(backend: backend, store: store)) }
+        await controller.sampleSpectrum()
+        XCTAssertEqual(controller.spectrum, SpectrumFrame())
+        await controller.start()
+        await model.perform(.select(0))
+        await controller.sampleSpectrum()
+        for _ in 0..<4 { _ = try backend.render(frames: 1024) }
+        await controller.sampleSpectrum()
+        XCTAssertGreaterThan(controller.spectrum.levels.max()!, 0)
+        XCTAssertNil(controller.spectrumFailure)
+        controller.setBackgrounded(true)
+        XCTAssertEqual(controller.spectrum, SpectrumFrame())
+        controller.setBackgrounded(false)
+        await controller.sampleSpectrum()
+        XCTAssertEqual(controller.spectrum, SpectrumFrame())
+        controller.stop()
+        XCTAssertEqual(controller.spectrum, SpectrumFrame())
     }
 }

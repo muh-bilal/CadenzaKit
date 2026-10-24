@@ -56,3 +56,6 @@
 "CarPlay is disabled in this app." = "CarPlay is disabled in this app.";
 "System playback is disabled in this app." = "System playback is disabled in this app.";
 "Music is unavailable. Reconnect to try again." = "Music is unavailable. Reconnect to try again.";
+"Spectrum motion reduced" = "Spectrum motion reduced";
+"Live audio spectrum" = "Live audio spectrum";
+"Spectrum idle" = "Spectrum idle";

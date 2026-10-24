@@ -30,12 +30,16 @@ public final class CadenzaPlayer {
     public var onChange: (() -> Void)?
     private let nowPlaying: (any NowPlayingController)?
     private let canSeek: Bool
+    private let spectrumService: SpectrumService
+    private var spectrumGeneration: UInt64 = 0
+    private var backgrounded = false
     private var polling: Task<Void, Never>?
 
     public init(source: any SourceProvider, additionalSources: [any SourceProvider] = [], features: FeatureFlags = .init(), backend: (any PlaybackBackend)? = nil, systemPlayback: (any SystemPlaybackController)? = nil, clock: any PlaybackClock = ContinuousPlaybackClock(), nowPlaying: (any NowPlayingController)? = nil, runtimeCapabilities: @escaping @Sendable () async -> RuntimeCapabilities = { .init() }) throws {
         services = try Cadenza(configuration: .init(defaultProvider: source.identifier, features: features), providers: [source] + additionalSources, runtimeCapabilities: runtimeCapabilities)
         let backend = backend ?? AVPlayerBackend(allowRemote: features.remotePlayback)
         queue = services.makeQueue(backend: backend, systemPlayback: systemPlayback ?? AppleSystemPlaybackController())
+        spectrumService = services.makeSpectrum(backend: backend)
         canSeek = features.seeking && backend.supportedFeatures.contains(.seeking)
         self.nowPlaying = features.systemPlayback ? (nowPlaying ?? AppleNowPlayingController()) : nil
         self.nowPlaying?.connect { [weak self] command in await self?.receive(command) }
@@ -51,7 +55,8 @@ public final class CadenzaPlayer {
     deinit {
         polling?.cancel()
         let nowPlaying = nowPlaying
-        Task { @MainActor in nowPlaying?.clear() }
+        let spectrumService = spectrumService
+        Task { @MainActor in spectrumService.stop(); nowPlaying?.clear() }
     }
 
     public func play(_ id: MediaID, provider: String? = nil) async throws {
@@ -61,6 +66,7 @@ public final class CadenzaPlayer {
     public func play(entries: [QueueEntry], startingAt id: UUID? = nil) async throws {
         defer { notify() }
         failure = nil
+        stopSpectrum()
         try await queue.playEntries(entries, startingAt: id)
     }
 
@@ -68,18 +74,19 @@ public final class CadenzaPlayer {
     public func play(entryID: UUID) async throws {
         defer { notify() }
         failure = nil
+        stopSpectrum()
         try await queue.play(entryID)
     }
 
-    public func resume() async throws { defer { notify() }; try await queue.play() }
+    public func resume() async throws { defer { notify() }; stopSpectrum(); try await queue.play() }
     public func pause() throws { defer { notify() }; try queue.pause() }
-    public func seek(to position: Double) async throws { defer { notify() }; try await queue.seek(to: position) }
-    public func next() async throws { defer { notify() }; try await queue.next() }
-    public func previous() async throws { defer { notify() }; try await queue.previous() }
+    public func seek(to position: Double) async throws { defer { notify() }; stopSpectrum(); try await queue.seek(to: position) }
+    public func next() async throws { defer { notify() }; stopSpectrum(); try await queue.next() }
+    public func previous() async throws { defer { notify() }; stopSpectrum(); try await queue.previous() }
     public func stop() { queue.stop(); failure = nil; notify() }
 
     /// Forward scene background/foreground (or Mac visibility) changes here.
-    public func setBackgrounded(_ value: Bool) { queue.setBackgrounded(value); notify() }
+    public func setBackgrounded(_ value: Bool) { backgrounded = value; stopSpectrum(); queue.setBackgrounded(value); notify() }
 
     /// Also available for deterministic hosts/tests; automatic sampling uses the
     /// injected clock. A competing command is retried on the next tick.
@@ -99,7 +106,22 @@ public final class CadenzaPlayer {
         notify(force: false)
     }
 
+    /// Sample from the same backend and current source as playback. Hosts should
+    /// await sequentially at about 30 Hz and stop observation when no view needs it.
+    public func readSpectrum() async throws -> SpectrumFrame {
+        guard !backgrounded, snapshot.state == .playing else { stopSpectrum(); return SpectrumFrame() }
+        let token = spectrumGeneration
+        let resource = snapshot.resource?.id
+        let provider = queue.entries.first { $0.id == queue.currentEntryID }?.provider
+        let frame = try await spectrumService.read(provider: provider)
+        guard token == spectrumGeneration, snapshot.state == .playing, resource == snapshot.resource?.id else { throw CancellationError() }
+        return frame
+    }
+
+    public func stopSpectrum() { spectrumGeneration &+= 1; spectrumService.stop() }
+
     private func notify(force: Bool = true) {
+        if force || snapshot.state != .playing { stopSpectrum() }
         nowPlaying?.update(snapshot, canSeek: canSeek, force: force)
         onChange?()
     }

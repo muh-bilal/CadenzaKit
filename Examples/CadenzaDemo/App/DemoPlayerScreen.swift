@@ -5,6 +5,7 @@ import CadenzaSwiftUI
 struct DemoPlayerScreen: View {
     @ObservedObject var player: Showcase
     let model: DemoModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var scheme
     @AppStorage("showcase-appearance") private var appearanceMode = 0
     @State private var empty: Bool
@@ -33,7 +34,7 @@ struct DemoPlayerScreen: View {
     private var appearance: PlayerAppearance {
         var value = PlayerAppearance()
         value.fonts.title = .system(size: titleSize, weight: .semibold)
-        value.metrics.spacing = 16
+        value.metrics.spacing = 12
         if accent != 0 {
             value.light.accent = accent == 1 ? .indigo : .orange
             value.dark.accent = value.light.accent
@@ -87,6 +88,7 @@ struct DemoPlayerScreen: View {
                 .clipShape(RoundedRectangle(cornerRadius: context.appearance.metrics.artworkRadius))
                 .shadow(color: colors.artworkShadow, radius: context.appearance.metrics.artworkShadowRadius, y: context.appearance.metrics.artworkShadowY)
         }
+        value.set(.footer) { _ in spectrumDisplay }
         if customButtons {
             value.setButton { button in
                 Button(action: button.perform) {
@@ -124,6 +126,14 @@ struct DemoPlayerScreen: View {
                 }
             }
             .background(colors.background).foregroundStyle(colors.foreground).tint(colors.accent)
+        }
+        .task(id: !empty && !reduceMotion && !player.isBackgrounded) {
+            defer { player.stopSpectrum() }
+            guard !empty, !reduceMotion, !player.isBackgrounded else { return }
+            while !Task.isCancelled {
+                await player.sampleSpectrum()
+                do { try await Task.sleep(for: .milliseconds(33)) } catch { break }
+            }
         }
         .preferredColorScheme(appearanceMode == 0 ? nil : appearanceMode == 1 ? .light : .dark)
         .sheet(item: $panel) { panel in
@@ -311,8 +321,19 @@ struct DemoPlayerScreen: View {
         }.demoButtonStyle()
     }
 
+    private var spectrumDisplay: some View {
+        VStack(spacing: 6) {
+            CadenzaSpectrumView(frame: player.spectrum, color: colors.accent)
+                .frame(height: 32).accessibilityIdentifier("audio-spectrum")
+            Text(demoText(reduceMotion ? "Spectrum motion reduced" : model.queue.snapshot.state == .playing ? "Live audio spectrum" : "Spectrum idle"))
+                .font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("spectrum-state")
+            if let failure = player.spectrumFailure { Text(failure).font(.caption).accessibilityIdentifier("spectrum-error") }
+        }
+    }
+
     private var sound: some View {
         VStack(alignment: .leading, spacing: 20) {
+            spectrumDisplay
             Text(demoText("Native AVAudioEngine equalizer · CadenzaKit capability checks")).font(.subheadline)
             HStack {
                 Button(demoText("Warm bass")) { Task { await player.setSound(bass: true) } }.accessibilityIdentifier("warm-bass")

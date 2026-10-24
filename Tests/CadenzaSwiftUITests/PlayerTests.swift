@@ -188,3 +188,20 @@ struct PlayerTests {
     PlayerScrub.adjusting(storage, state: state, step: 1, seek: nil)(.increment)
     #expect(seeks == [4, 0])
 }
+
+@MainActor @Test func spectrumRendersMeasuredLevelsCustomizationAndReducedMotion() throws {
+    func render(_ frame: SpectrumFrame, reduced: Bool = false, custom: Bool = false) throws -> Data {
+        let view = CadenzaSpectrumView(frame: frame, color: custom ? .orange : .blue,
+            spacing: custom ? 0 : 3, cornerRadius: custom ? 0 : 2,
+            minimumBarHeight: custom ? 4 : 2, reducesMotion: reduced, accessibilityTitle: "Host spectrum")
+            .frame(width: 320, height: 80)
+        let renderer = ImageRenderer(content: view)
+        let image = try #require(renderer.cgImage)
+        return try #require(image.dataProvider?.data) as Data
+    }
+    let silent = SpectrumFrame(), tone = SpectrumFrame(levels: Array(repeating: 0.75, count: 32))
+    #expect(try render(silent) != render(tone))
+    #expect(try render(tone) != render(tone, custom: true))
+    #expect(try render(silent, reduced: true) == render(tone, reduced: true))
+    #expect(!CadenzaSpectrumView(frame: silent).accessibilityTitle.isEmpty)
+}
