@@ -593,3 +593,35 @@ profile; the SDK cannot grant these. See Apple's
 [CarPlay entitlement setup](https://developer.apple.com/documentation/carplay/requesting-carplay-entitlements).
 CarPlay Now Playing consumes the same MediaPlayer metadata and commands described
 above; it does not create a separate playback engine.
+
+## Audio spectrum analysis
+
+`FeatureFlags(spectrum: true)` opts into real PCM analysis separately from EQ.
+Retain `kit.makeSpectrum(backend: engineBackend)` and call
+`await spectrum.read(provider:)` at a bounded cadence such as 30 Hz. Pass the
+current queue entry's provider when using multiple sources. Each read checks
+source, backend, platform and route capabilities; denial stops capture and throws
+`featureUnavailable(.spectrum, reason)`. Call `stop()` when observation ends or the
+host backgrounds. It also invalidates pending reads. Flags default to disabled.
+
+`AVAudioEngineBackend` captures the first decoded channel **after EQ**, before
+mixer/output volume. It supports local files; `AVPlayerBackend` does not expose
+PCM and explicitly lacks `.spectrum` support (including HTTPS playback).
+`LocalFileSource` and `CatalogFileSource` advertise spectrum support. Custom
+providers must advertise it themselves. Direct backend APIs bypass service policy,
+as with the low-level playback and EQ APIs.
+
+`SpectrumFrame.levels` contains 32 logarithmic bands spanning 20 Hz–20 kHz. A
+1024-sample Hann-windowed FFT maps peak bin magnitudes from −80…0 dBFS to 0…1.
+Bands without a resolvable FFT bin, including those above Nyquist, remain zero.
+This is a visualizer, not a calibrated loudness meter; low-frequency resolution
+is limited by the FFT window. Channel one avoids antiphase cancellation; this
+version does not combine channels or measure output-route volume.
+
+The audio callback only copies at most 4096 samples into preallocated storage.
+It uses a nonblocking lock attempt and drops the block on contention. FFT and
+result allocation occur on the main-actor consumer, outside the audio callback.
+No callbacks spawn tasks or enqueue unbounded work. Pause, seek, stop, reload and
+disable discard buffered samples; detached callbacks retain an obsolete mailbox
+and cannot repopulate the current one. Offline rendering analyzes the actual
+rendered PCM using the same FFT path. No capture or FFT occurs until enabled.

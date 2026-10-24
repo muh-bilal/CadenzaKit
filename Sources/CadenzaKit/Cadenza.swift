@@ -99,6 +99,11 @@ public struct Cadenza: Sendable {
         DownloadStorageService(flags: configuration.features, store: store)
     }
 
+    @MainActor
+    public func makeSpectrum(backend: any PlaybackBackend) -> SpectrumService {
+        SpectrumService(kit: self, backend: backend)
+    }
+
     public func makeEqualizer(backend: any PlaybackBackend, store: any DocumentStore) -> EqualizerService {
         EqualizerService(kit: self, backend: backend, store: store)
     }

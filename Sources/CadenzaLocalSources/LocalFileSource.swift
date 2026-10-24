@@ -5,7 +5,7 @@ import CadenzaDomain
 /// for the entire playback lifetime; this provider does not invent permissions.
 public struct LocalFileSource: SourceProvider {
     public let identifier: String
-    public let supportedFeatures: Set<Feature> = [.sourceResolution, .playback, .systemPlayback, .seeking, .equalizer]
+    public let supportedFeatures: Set<Feature> = [.sourceResolution, .playback, .systemPlayback, .seeking, .equalizer, .spectrum]
     private let resources: [MediaID: MediaResource]
 
     public init(identifier: String = "local", resources: [MediaID: MediaResource]) throws {

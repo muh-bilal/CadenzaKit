@@ -6,6 +6,7 @@ public enum Feature: String, CaseIterable, Hashable, Sendable {
     case remotePlayback
     case downloads
     case equalizer
+    case spectrum
     case systemPlayback
 }
 
@@ -33,6 +34,7 @@ public struct FeatureFlags: Equatable, Sendable {
     public var storageManagement: Bool
     public var systemPlayback: Bool
     public var carPlay: Bool
+    public var spectrum: Bool
     public var equalizer: Bool
 
     public init(
@@ -59,6 +61,7 @@ public struct FeatureFlags: Equatable, Sendable {
         storageManagement: Bool = false,
         systemPlayback: Bool = false,
         carPlay: Bool = false,
+        spectrum: Bool = false,
         equalizer: Bool = false
     ) {
         self.sourceResolution = sourceResolution
@@ -84,6 +87,7 @@ public struct FeatureFlags: Equatable, Sendable {
         self.storageManagement = storageManagement
         self.systemPlayback = systemPlayback
         self.carPlay = carPlay
+        self.spectrum = spectrum
         self.equalizer = equalizer
     }
 
@@ -95,6 +99,7 @@ public struct FeatureFlags: Equatable, Sendable {
         case .remotePlayback: remotePlayback
         case .downloads: downloads
         case .systemPlayback: systemPlayback
+        case .spectrum: spectrum
         case .equalizer: equalizer
         }
     }
@@ -121,9 +126,9 @@ public struct RuntimeCapabilities: Equatable, Sendable {
     public var outputRoute: Set<Feature>
 
     public init(
-        backend: Set<Feature> = [.sourceResolution, .playback, .seeking, .remotePlayback, .downloads, .equalizer, .systemPlayback],
-        platform: Set<Feature> = [.sourceResolution, .playback, .seeking, .remotePlayback, .downloads, .equalizer, .systemPlayback],
-        outputRoute: Set<Feature> = [.sourceResolution, .playback, .seeking, .remotePlayback, .downloads, .equalizer, .systemPlayback]
+        backend: Set<Feature> = [.sourceResolution, .playback, .seeking, .remotePlayback, .downloads, .equalizer, .systemPlayback, .spectrum],
+        platform: Set<Feature> = [.sourceResolution, .playback, .seeking, .remotePlayback, .downloads, .equalizer, .systemPlayback, .spectrum],
+        outputRoute: Set<Feature> = [.sourceResolution, .playback, .seeking, .remotePlayback, .downloads, .equalizer, .systemPlayback, .spectrum]
     ) {
         self.backend = backend
         self.platform = platform

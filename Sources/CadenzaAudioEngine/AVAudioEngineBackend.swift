@@ -4,7 +4,7 @@ import CadenzaDomain
 
 /// Decoded local audio. Manual output uses the same graph without device I/O.
 @MainActor
-public final class AVAudioEngineBackend: EqualizerBackend {
+public final class AVAudioEngineBackend: EqualizerBackend, SpectrumBackend {
     public enum Output: Sendable { case device, manual }
     public struct RenderedAudio {
         public let status: AVAudioEngineManualRenderingStatus
@@ -12,7 +12,7 @@ public final class AVAudioEngineBackend: EqualizerBackend {
     }
 
     public var supportedFeatures: Set<Feature> {
-        output == .device ? [.playback, .seeking, .equalizer, .systemPlayback] : [.playback, .seeking, .equalizer]
+        output == .device ? [.playback, .seeking, .spectrum, .equalizer, .systemPlayback] : [.playback, .seeking, .spectrum, .equalizer]
     }
     public private(set) var equalizerSettings = EqualizerSettings()
     public let output: Output
@@ -24,6 +24,31 @@ public final class AVAudioEngineBackend: EqualizerBackend {
     private var startFrame: AVAudioFramePosition = 0
     private var generation: UInt64 = 0
     private var completed = false
+    private var analyzer: SpectrumAnalyzer?
+    private var hasTap = false
+
+    public func setSpectrumEnabled(_ enabled: Bool) {
+        guard enabled != (analyzer != nil) else { return }
+        if enabled { analyzer = SpectrumAnalyzer(); installSpectrumTap() }
+        else { removeSpectrumTap(); analyzer = nil }
+    }
+
+    public func spectrum() -> SpectrumFrame {
+        guard let analyzer, let file, (try? status().isPlaying) == true else { return SpectrumFrame() }
+        return analyzer.read(sampleRate: file.processingFormat.sampleRate)
+    }
+
+    private func installSpectrumTap() {
+        guard output == .device, file != nil, let analyzer, !hasTap else { return }
+        let mailbox = analyzer.mailbox
+        equalizer.installTap(onBus: 0, bufferSize: 1024, format: nil) { @Sendable buffer, _ in mailbox.capture(buffer) }
+        hasTap = true
+    }
+
+    private func removeSpectrumTap() {
+        if hasTap { equalizer.removeTap(onBus: 0); hasTap = false }
+        analyzer?.reset()
+    }
 
     public init(output: Output = .device) {
         self.output = output
@@ -50,6 +75,7 @@ public final class AVAudioEngineBackend: EqualizerBackend {
         }
         try Task.checkCancellation()
         self.file = file
+        installSpectrumTap()
         schedule(file, from: 0)
         return Double(file.length) / file.processingFormat.sampleRate
     }
@@ -57,10 +83,11 @@ public final class AVAudioEngineBackend: EqualizerBackend {
     public func play() throws {
         guard file != nil else { throw CadenzaError.noMediaLoaded }
         if !engine.isRunning { try engine.start() }
+        installSpectrumTap()
         player.play()
     }
 
-    public func pause() { player.pause() }
+    public func pause() { player.pause(); removeSpectrumTap() }
 
     public func applyEqualizer(_ settings: EqualizerSettings) throws {
         try Task.checkCancellation()
@@ -97,6 +124,8 @@ public final class AVAudioEngineBackend: EqualizerBackend {
         let playing = player.isPlaying
         generation &+= 1
         player.stop()
+        removeSpectrumTap()
+        installSpectrumTap()
         schedule(file, from: min(file.length, AVAudioFramePosition((position * file.processingFormat.sampleRate).rounded())))
         if playing { player.play() }
     }
@@ -105,6 +134,7 @@ public final class AVAudioEngineBackend: EqualizerBackend {
         generation &+= 1
         player.stop()
         engine.stop()
+        removeSpectrumTap()
         engine.reset()
         file = nil
         startFrame = 0
@@ -113,7 +143,7 @@ public final class AVAudioEngineBackend: EqualizerBackend {
 
     public func status() throws -> BackendStatus {
         guard let file else { throw CadenzaError.noMediaLoaded }
-        let elapsed = player.lastRenderTime.flatMap { player.playerTime(forNodeTime: $0)?.sampleTime } ?? 0
+        let elapsed = player.lastRenderTime.flatMap { ($0.isSampleTimeValid || $0.isHostTimeValid) ? player.playerTime(forNodeTime: $0)?.sampleTime : nil } ?? 0
         let frame = min(file.length, startFrame + max(0, elapsed))
         let ended = output == .manual ? frame == file.length : completed
         return BackendStatus(position: Double(frame) / file.processingFormat.sampleRate,
@@ -128,6 +158,7 @@ public final class AVAudioEngineBackend: EqualizerBackend {
               frames > 0, frames <= Self.maximumRenderFrames else { throw CadenzaError.invalidRenderRequest }
         guard let buffer = AVAudioPCMBuffer(pcmFormat: engine.manualRenderingFormat, frameCapacity: frames) else { throw CadenzaError.invalidRenderRequest }
         let status = try engine.renderOffline(frames, to: buffer)
+        if status == .success, player.isPlaying { analyzer?.mailbox.capture(buffer) }
         return RenderedAudio(status: status, buffer: buffer)
     }
 

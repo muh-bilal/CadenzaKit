@@ -4,7 +4,7 @@ import CadenzaDomain
 /// A live catalog lookup, with local-file access validated after lookup.
 public struct CatalogFileSource: SourceProvider {
     public let identifier: String
-    public let supportedFeatures: Set<Feature> = [.sourceResolution, .playback, .systemPlayback, .seeking, .equalizer]
+    public let supportedFeatures: Set<Feature> = [.sourceResolution, .playback, .systemPlayback, .seeking, .equalizer, .spectrum]
     private let lookup: @Sendable (MediaID) async throws -> MediaResource
 
     public init(identifier: String, lookup: @escaping @Sendable (MediaID) async throws -> MediaResource) {
